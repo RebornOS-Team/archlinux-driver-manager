@@ -1,0 +1,17 @@
+[package]
+name = "archlinux-driver-manager"
+version = "0.0.1"
+edition = "2021"
+license = "MPL-2.0"
+authors = ["shivanandvp <shivanandvp.oss@gmail.com, shivanandvp@rebornos.org>"]
+readme = "README.md"
+repository = "https://gitlab.com/shivanandvp/archlinux-driver-manager.git"
+description = "A driver manager for Arch Linux"
+# documentation = "https://docs.rs/archlinux-driver-manager"
+keywords = ["driver", "drivers", "hardware", "arch"]
+categories = ["command-line-utilities"]
+exclude = ["scripts/*", ".gitlab-ci.yml", "ArchLinuxDriverManager.code-workspace"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
