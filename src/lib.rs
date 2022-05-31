@@ -29,9 +29,10 @@ pub enum Error {
 
 pub mod commandline {
 
-    use clap::Parser;
-
     pub use clap_template::*;
+
+    use crate::*;
+    use clap::Parser;
     use serde::Serialize;
 
     pub enum CommandlineOutputKind {
@@ -85,7 +86,28 @@ pub mod commandline {
 
             match cli.command {
                 Some(ActionCommand::List(list_arguments)) => {}
-                Some(ActionCommand::Search(search_arguments)) => {}
+                Some(ActionCommand::Search(search_arguments)) => {
+                    let db = DriverDatabase::load_from_path_or_default("test.ron").unwrap();
+                    println!("Writing to Database");
+                    db.write(|db| {
+                        db.insert(0x12345678..=0x123456ab, vec![DriverRecord::default()]);
+                        println!("Entries: \n{:#?}", db);
+                    })
+                    .unwrap();
+
+                    println!("Syncing Database");
+                    db.save().unwrap();
+
+                    println!("Loading Database");
+                    db.load().unwrap();
+
+                    println!("Reading from Database");
+                    db.read(|db| {
+                        println!("Results:");
+                        println!("{:#?}", db);
+                    })
+                    .unwrap();
+                }
                 Some(ActionCommand::Install(install_arguments)) => {}
                 None => {}
             }
@@ -217,33 +239,84 @@ pub mod commandline {
 
 pub mod data {
     use rangemap::RangeInclusiveMap;
-    use serde::{Serialize, Deserialize};
-    use std::{path::PathBuf, collections::HashMap};
+    use rustbreak::{deser::Ron, FileDatabase};
+    use serde::{Deserialize, Serialize};
+    use std::{collections::HashMap, path::PathBuf, fmt::Display};
 
+    // pub type DriverListing = RangeInclusiveMap<u32, Vec<DriverRecord>>;
     pub type DriverListing = RangeInclusiveMap<u32, Vec<DriverRecord>>;
+    pub type DriverDatabase = FileDatabase<DriverListing, Ron>;
 
-    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(
+        Default,
+        PartialEq, // Required to implement Eq
+        Eq,        // Required by RangeInclusiveMap to implement Serialize and Deserialize
+        Copy,
+        Clone,     // Required by RangeInclusiveMap to implement Serialize and Deserialize
+        Serialize,
+        Deserialize,
+    )]
+    pub struct PciId {
+        pub inner: u32,
+    }
+
+    impl Display for PciId {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", self.inner)
+        }
+    }
+
+    #[derive(
+        Default,
+        Debug,
+        PartialEq, // Required to implement Eq
+        Eq,        // Required by RangeInclusiveMap to implement Serialize and Deserialize
+        Clone,     // Required by RangeInclusiveMap to implement Serialize and Deserialize
+        Serialize,
+        Deserialize,
+    )]
     pub struct DriverRecord {
         pub packages: Vec<String>,
         pub configs: Vec<ConfigRecord>,
         pub tags: Vec<String>,
         pub pre_install_script: Option<PathBuf>,
-        pub post_install_script: Option<PathBuf>,        
+        pub post_install_script: Option<PathBuf>,
     }
 
-    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(
+        Default,
+        Debug,
+        PartialEq, // Required to implement Eq
+        Eq,        // Required by RangeInclusiveMap to implement Serialize and Deserialize
+        Clone,     // Required by RangeInclusiveMap to implement Serialize and Deserialize
+        Serialize,
+        Deserialize,
+    )]
     pub struct ConfigRecord {
         pub format: ConfigFormat,
         pub path: Option<PathBuf>,
-        pub entries: HashMap<String, String>,    
+        pub entries: HashMap<String, String>,
     }
-    
-    #[derive(Debug, Clone, Serialize, Deserialize)]
+
+    #[derive(
+        Debug,
+        PartialEq, // Required to implement Eq
+        Eq,        // Required by RangeInclusiveMap to implement Serialize and Deserialize
+        Clone,     // Required by RangeInclusiveMap to implement Serialize and Deserialize
+        Serialize,
+        Deserialize,
+    )]
     pub enum ConfigFormat {
         Ini,
         Json,
         Yaml,
         Toml,
-        Xml,    
+        Xml,
+    }
+
+    impl Default for ConfigFormat {
+        fn default() -> Self {
+            return ConfigFormat::Ini;
+        }
     }
 }
