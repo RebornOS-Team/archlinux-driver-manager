@@ -24,7 +24,7 @@ md5sums=()
 instdir="/opt/ArchLinuxDriverManager"
 
 PROJECT_DIRECTORY="$(dirname -- "$(dirname -- "$(pwd)")")"
-RESOURCE_DIRECTORY="$PROJECT_DIRECTORY/scripts/archlinux_packaging"
+RESOURCE_DIRECTORY="$PROJECT_DIRECTORY/scripts/packaging"
 NUMBER_OF_PROCESSORS="$(nproc)"
 
 build() {

@@ -3,5 +3,5 @@
 Cargo.lock
 
 # Packaging
-scripts/archlinux_packaging/pkg
-scripts/archlinux_packaging/src
+scripts/packaging/pkg
+scripts/packaging/src
