@@ -29,3 +29,4 @@ rangemap = { version = "1.0", features = ["serde1"] }
 
 # Miscellaneous
 snafu = "0.7"
+ron = "0.7.0"

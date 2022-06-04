@@ -92,7 +92,8 @@ pub mod commandline {
                     println!("Writing to Database");
                     db.write(|db| {
                         db.insert(
-                            PciId::range_inclusive("1234:5678", "1234:56ab").expect("Invalid PCI IDs supplied"),
+                            PciId::range_inclusive("1234:5678", "1234:56ab")
+                                .expect("Invalid PCI IDs supplied"),
                             vec![DriverRecord::default()],
                         );
                         println!("Entries: \n{:#?}", db);
@@ -272,24 +273,38 @@ pub mod data {
     }
 
     impl PciId {
+        pub fn new(vendor_id: u16, device_id: u16) -> Self {
+            Self {
+                value: (vendor_id as u32) * 16u32.pow(4) + (device_id as u32),
+            }
+        }
+
         pub fn vendor_id(&self) -> u16 {
-            let vendor_id = self.value % 2u32.pow(4);
+            let vendor_id = self.value / 16u32.pow(4);
+            println!(
+                "self.value: {:08x}, vendor_id: {:04x}",
+                self.value, vendor_id
+            );
             vendor_id
                 .try_into()
                 .expect("The Vendor ID does not fit into an unsigned 16-bit integer.")
         }
+
         pub fn device_id(&self) -> u16 {
-            let device_id = self.value / 2u32.pow(4);
+            let device_id = self.value % 16u32.pow(4);
+            println!("self.value: {:08x}, device_id: {:04x}", self.value, device_id);
             device_id
                 .try_into()
                 .expect("The Device ID does not fit into an unsigned 16-bit integer.")
         }
+
         pub fn range(start: &str, end: &str) -> Result<Range<Self>, ParsePciIdError> {
             Ok(Range {
                 start: start.parse()?,
                 end: end.parse()?,
             })
         }
+
         pub fn range_inclusive(
             start: &str,
             end: &str,
@@ -300,15 +315,15 @@ pub mod data {
 
     impl Display for PciId {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(f, "{:04}:{:04}", self.vendor_id(), self.device_id())
+            write!(f, "{:04x}:{:04x}", self.vendor_id(), self.device_id())
         }
     }
 
     impl Debug for PciId {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             f.debug_struct("PciId")
-                .field("vendor_id", &format!("{:04}", &self.vendor_id()))
-                .field("device_id", &format!("{:04}", &self.device_id()))
+                .field("vendor_id", &format!("{:04x}", &self.vendor_id()))
+                .field("device_id", &format!("{:04x}", &self.device_id()))
                 .finish()
         }
     }
@@ -333,7 +348,7 @@ pub mod data {
                 fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
                     write!(formatter, "a PCI ID")
                 }
-                fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+                fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
                 where
                     E: de::Error,
                 {
@@ -363,13 +378,11 @@ pub mod data {
 
         fn from_str(s: &str) -> Result<Self, Self::Err> {
             let (vendor_id, device_id) = s.split_once(':').ok_or(ParsePciIdError::MissingColon)?;
-            let vendor_id = u32::from_str_radix(vendor_id, 16)
+            let vendor_id = u16::from_str_radix(vendor_id, 16)
                 .map_err(|parse_int_error| ParsePciIdError::InvalidVendorId(parse_int_error))?;
-            let device_id = u32::from_str_radix(device_id, 16)
+            let device_id = u16::from_str_radix(device_id, 16)
                 .map_err(|parse_int_error| ParsePciIdError::InvalidDeviceId(parse_int_error))?;
-            Ok(Self {
-                value: vendor_id * 2u32.pow(4) + device_id,
-            })
+            Ok(Self::new(vendor_id, device_id))
         }
     }
 
