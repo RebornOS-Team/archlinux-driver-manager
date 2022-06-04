@@ -1,0 +1,11 @@
+[
+    (("0008:6043", "0011:6046"), [
+        (
+            packages: [],
+            configs: [],
+            tags: [],
+            pre_install_script: None,
+            post_install_script: None,
+        ),
+    ]),
+]
