@@ -292,7 +292,10 @@ pub mod data {
 
         pub fn device_id(&self) -> u16 {
             let device_id = self.value % 16u32.pow(4);
-            println!("self.value: {:08x}, device_id: {:04x}", self.value, device_id);
+            println!(
+                "self.value: {:08x}, device_id: {:04x}",
+                self.value, device_id
+            );
             device_id
                 .try_into()
                 .expect("The Device ID does not fit into an unsigned 16-bit integer.")
@@ -422,8 +425,42 @@ pub mod data {
         pub packages: Vec<String>,
         pub configs: Vec<ConfigRecord>,
         pub tags: Vec<String>,
-        pub pre_install_script: Option<PathBuf>,
-        pub post_install_script: Option<PathBuf>,
+        pub pre_install_script: Option<Script>,
+        pub post_install_script: Option<Script>,
+    }
+
+    #[derive(
+        Default,
+        Debug,
+        PartialEq, // Required to implement Eq
+        Eq,        // Required by RangeInclusiveMap to implement Serialize and Deserialize
+        Clone,     // Required by RangeInclusiveMap to implement Serialize and Deserialize
+        Serialize,
+        Deserialize,
+    )]
+    pub struct Script {
+        pub script_kind: ScriptKind,
+        pub path: Option<PathBuf>,
+    }
+
+    #[derive(
+        Debug,
+        PartialEq, // Required to implement Eq
+        Eq,        // Required by RangeInclusiveMap to implement Serialize and Deserialize
+        Clone,     // Required by RangeInclusiveMap to implement Serialize and Deserialize
+        Serialize,
+        Deserialize,
+    )]
+    pub enum ScriptKind {
+        Python,
+        JavaScript,
+        Shell,
+    }
+
+    impl Default for ScriptKind {
+        fn default() -> Self {
+            return Self::Shell;
+        }
     }
 
     #[derive(
