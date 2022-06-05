@@ -1,20 +1,24 @@
+use crate::error::{DatabaseSnafu, Error};
 use rangemap::{RangeInclusiveMap, StepLite};
 use rustbreak::{deser::Ron, FileDatabase};
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use snafu::ResultExt;
 use std::num::ParseIntError;
 use std::{
     collections::HashMap,
     fmt::{Debug, Display},
-    ops::{Range, RangeInclusive},
+    ops::{Deref, DerefMut, Range, RangeInclusive},
     path::PathBuf,
     str::FromStr,
 };
 
-// pub type DriverListing = RangeInclusiveMap<u32, Vec<DriverRecord>>;
 pub type DriverListing = RangeInclusiveMap<PciId, Vec<DriverRecord>>;
-pub type DriverDatabase = FileDatabase<DriverListing, Ron>;
 
 // region: DATA MODEL
+#[derive(Debug)]
+pub struct DriverDatabase {
+    inner: FileDatabase<DriverListing, Ron>,
+}
 
 #[derive(
     Default,
@@ -115,6 +119,33 @@ pub enum ScriptKind {
 // endregion: DATA MODEL
 
 // region: IMPLEMENTATIONS
+
+impl DriverDatabase {
+    pub fn try_new() -> Result<Self, Error> {
+        Self::try_with_file("driver_database.ron".into())
+    }
+
+    pub fn try_with_file(filepath: PathBuf) -> Result<Self, Error> {
+        Ok(DriverDatabase {
+            inner: FileDatabase::<DriverListing, Ron>::load_from_path_or_default(filepath)
+                .context(DatabaseSnafu {})?,
+        })
+    }
+}
+
+impl Deref for DriverDatabase {
+    type Target = FileDatabase<DriverListing, Ron>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl DerefMut for DriverDatabase {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
 
 impl PciId {
     pub fn new(vendor_id: u16, device_id: u16) -> Self {

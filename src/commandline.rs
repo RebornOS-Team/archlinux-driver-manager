@@ -1,4 +1,4 @@
-pub use clap_template::*;
+pub use commandline_interface_template::*;
 
 use clap::Parser;
 use serde::Serialize;
@@ -45,8 +45,51 @@ pub enum CommandlineOutputKind {
     Debug,
 }
 
-mod clap_template {
+impl CommandlineInterface {
+    pub fn new() -> Self {
+        CommandlineInterface {}
+    }
+
+    pub fn run(self) {
+        let cli = Cli::parse();
+
+        match cli.command {
+            Some(ActionCommand::List(list_arguments)) => {}
+            Some(ActionCommand::Search(search_arguments)) => {
+                let db = DriverDatabase::try_new().unwrap();
+                println!("Writing to Database");
+                db.write(|db| {
+                    db.insert(
+                        PciId::range_inclusive("1234:5678", "1234:56ab")
+                            .expect("Invalid PCI IDs supplied"),
+                        vec![DriverRecord::default()],
+                    );
+                    println!("Entries: \n{:#?}", db);
+                })
+                .unwrap();
+
+                println!("Syncing Database");
+                db.save().unwrap();
+
+                println!("Loading Database");
+                db.load().unwrap();
+
+                println!("Reading from Database");
+                db.read(|db| {
+                    println!("Results:");
+                    println!("{:#?}", db);
+                })
+                .unwrap();
+            }
+            Some(ActionCommand::Install(install_arguments)) => {}
+            None => {}
+        }
+    }
+}
+
+pub mod commandline_interface_template {
     use clap::{Args, Parser, Subcommand};
+    use std::path::PathBuf;
 
     use super::CommandlineFlags;
 
@@ -150,6 +193,13 @@ mod clap_template {
             display_order = 22
         )]
         pub tags: Vec<String>,
+
+        #[clap(
+            long = "database",
+            help = "The `ron` database file to use for searching drivers.",
+            display_order = 23
+        )]
+        pub database_file: Option<PathBuf>,
     }
 
     #[derive(Debug, Args)]
@@ -164,47 +214,12 @@ mod clap_template {
             display_order = 32
         )]
         pub tags: Vec<String>,
-    }
-}
 
-impl CommandlineInterface {
-    pub fn new() -> Self {
-        CommandlineInterface {}
-    }
-
-    pub fn run(self) {
-        let cli = Cli::parse();
-
-        match cli.command {
-            Some(ActionCommand::List(list_arguments)) => {}
-            Some(ActionCommand::Search(search_arguments)) => {
-                let db = DriverDatabase::load_from_path_or_default("test.ron").unwrap();
-                println!("Writing to Database");
-                db.write(|db| {
-                    db.insert(
-                        PciId::range_inclusive("1234:5678", "1234:56ab")
-                            .expect("Invalid PCI IDs supplied"),
-                        vec![DriverRecord::default()],
-                    );
-                    println!("Entries: \n{:#?}", db);
-                })
-                .unwrap();
-
-                println!("Syncing Database");
-                db.save().unwrap();
-
-                println!("Loading Database");
-                db.load().unwrap();
-
-                println!("Reading from Database");
-                db.read(|db| {
-                    println!("Results:");
-                    println!("{:#?}", db);
-                })
-                .unwrap();
-            }
-            Some(ActionCommand::Install(install_arguments)) => {}
-            None => {}
-        }
+        #[clap(
+            long = "database",
+            help = "The `ron` database file to use for searching drivers.",
+            display_order = 33
+        )]
+        pub database_file: Option<PathBuf>,
     }
 }
