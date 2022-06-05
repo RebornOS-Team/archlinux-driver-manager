@@ -1,12 +1,13 @@
 pub use commandline_interface_template::*;
 
+use crate::{data::{DriverDatabase, DriverRecord, PciId}, actions::list};
 use clap::Parser;
-use serde::Serialize;
-use crate::data::{DriverDatabase, DriverRecord, PciId};
+use owo_colors::{OwoColorize, Stream::Stdout};
+use crate::actions;
 
 pub struct CommandlineInterface {}
 
-pub trait CommandlinePrint: Serialize {
+pub trait CommandlinePrint {
     fn print(&self);
     fn print_json(&self);
     fn print_plain(&self);
@@ -54,8 +55,13 @@ impl CommandlineInterface {
         let cli = Cli::parse();
 
         match cli.command {
-            Some(ActionCommand::List(list_arguments)) => {}
-            Some(ActionCommand::Search(search_arguments)) => {
+            Some(ActionCommand::List(list_action_arguments)) => {
+                match actions::list::list(list_action_arguments) {
+                    Ok(list_action_output) => list_action_output.print_select(cli.global_arguments),
+                    Err(error) => error.print_select(cli.global_arguments),
+                }
+            }
+            Some(ActionCommand::Search(search_action_arguments)) => {
                 let db = DriverDatabase::try_new().unwrap();
                 println!("Writing to Database");
                 db.write(|db| {
@@ -81,10 +87,46 @@ impl CommandlineInterface {
                 })
                 .unwrap();
             }
-            Some(ActionCommand::Install(install_arguments)) => {}
+            Some(ActionCommand::Install(install_action_arguments)) => {}
             None => {}
         }
     }
+}
+
+impl<T> CommandlinePrint for T
+where
+    T: std::error::Error,
+{
+    fn print(&self) {
+        let message = format!(
+            "{} {}",
+            "ERROR:".if_supports_color(Stdout, |text| text.red()),
+            self,
+        );
+        eprintln!("{}",message);
+    }
+
+    fn print_json(&self) {
+        self.print();
+        println!("{{errors:[{}]}}", self,);
+    }
+
+    fn print_plain(&self) {
+        self.print();
+        println!("");
+    }
+
+    fn print_debug(&self) {
+        self.print();
+    }
+}
+
+impl<T, E> CommandlinePrint for Result<T,E>
+where,
+    T: CommandlinePrint,
+    E: CommandlinePrint,
+{
+
 }
 
 pub mod commandline_interface_template {
