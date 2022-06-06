@@ -50,16 +50,18 @@ check() {
 package() {
     # Starts in the `src` directory
 
-    # Copy the media files
-    # install -d -m 755 "${pkgdir}/${instdir}/media" # Create the media directory
-    # cp -r "$RESOURCE_DIRECTORY"/media/* "${pkgdir}/${instdir}/media" # Copy the media files
-    # chmod 755 -R "${pkgdir}/${instdir}/media" # Assign correct permissions to the media files 
+    # Copy the Database file
+    (
+        cd "$PROJECT_DIRECTORY" && \
+        install -d -m 755 "${pkgdir}/${instdir}"
+        install -m 644 "driver_database.ron" "${pkgdir}/${instdir}/" 
+    )
 
     # Copy the binaries
     install -d -m 755 "${pkgdir}/${instdir}/bin" # Temporary directory to store the binaries
     install -d -m 755 "${pkgdir}/usr/bin" # Create path to store the symbolic links to binaries 
 
-    find target/release \
+    find "target/release" \
      -maxdepth 1 \
      -executable \
      -type f \
@@ -73,7 +75,7 @@ package() {
     done      
     rmdir "${pkgdir}/${instdir}/bin" # Remove the temporary binary directory    
 
-    # Create a symlink for refresh-mirrors-rebornos to call refresh-mirrors.sh to maintain backward compatibility
+    # Create a symlink for "driver-manager" to call "archlinux-driver-manager"
     ln -s "/usr/bin/archlinux-driver-manager" "${pkgdir}/usr/bin/driver-manager"
     chmod 755 "${pkgdir}/usr/bin/driver-manager"
 

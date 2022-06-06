@@ -1,4 +1,4 @@
-use crate::error::{DatabaseSnafu, InvalidEnumArgumentSnafu, Error};
+use crate::error::{DatabaseSnafu, Error};
 use rangemap::{RangeInclusiveMap, StepLite};
 use rustbreak::{deser::Ron, FileDatabase};
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -12,27 +12,21 @@ use std::{
     str::FromStr,
 };
 
+pub type HardwareListing = HashMap<HardwareKind, DriverListing>;
 pub type DriverListing = RangeInclusiveMap<PciId, Vec<DriverRecord>>;
 
 // region: DATA MODEL
-#[derive(
-    Copy,
-    Clone,
-    Debug,
-    Serialize,
-    Deserialize,
-    clap::ArgEnum
-)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, clap::ArgEnum)]
 pub enum HardwareKind {
     Graphics,
     Ethernet,
     Wireless,
-    Sound,        
+    Sound,
 }
 
 #[derive(Debug)]
 pub struct DriverDatabase {
-    inner: FileDatabase<DriverListing, Ron>,
+    inner: FileDatabase<HardwareListing, Ron>,
 }
 
 #[derive(
@@ -77,7 +71,7 @@ pub struct DriverRecord {
     Debug,
     PartialEq, // Required to implement Eq
     Eq,        // Required by RangeInclusiveMap to implement Serialize and Deserialize
-    Clone,     // Required by RangeInclusiveMap to implement Serialize and Deserialize
+    Clone,    
     Serialize,
     Deserialize,
 )]
@@ -146,6 +140,12 @@ impl HardwareKind {
     }
 }
 
+impl Default for HardwareKind {
+    fn default() -> Self {
+        HardwareKind::Graphics
+    }
+}
+
 impl Display for HardwareKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -158,20 +158,16 @@ impl Display for HardwareKind {
 }
 
 impl DriverDatabase {
-    pub fn try_new() -> Result<Self, Error> {
-        Self::try_with_file("driver_database.ron".into())
-    }
-
-    pub fn try_with_file(filepath: PathBuf) -> Result<Self, Error> {
+    pub fn try_with_database_path(filepath: PathBuf) -> Result<Self, Error> {
         Ok(DriverDatabase {
-            inner: FileDatabase::<DriverListing, Ron>::load_from_path_or_default(filepath)
+            inner: FileDatabase::<HardwareListing, Ron>::load_from_path_or_default(filepath)
                 .context(DatabaseSnafu {})?,
         })
     }
 }
 
 impl Deref for DriverDatabase {
-    type Target = FileDatabase<DriverListing, Ron>;
+    type Target = FileDatabase<HardwareListing, Ron>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

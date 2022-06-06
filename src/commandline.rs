@@ -1,9 +1,6 @@
 pub use commandline_interface_template::*;
 
-use crate::{
-    actions::{install, list, search},
-    data::{DriverDatabase, DriverRecord, PciId},
-};
+use crate::actions::{install, list, search};
 use clap::Parser;
 use owo_colors::{OwoColorize, Stream::Stderr};
 use std::fmt::Display;
@@ -230,6 +227,14 @@ pub mod commandline_interface_template {
             display_order = 12
         )]
         pub tags: Vec<String>,
+
+        #[clap(
+            long = "database",
+            help = "Path to the `ron` database file to use for recognizing drivers.",
+            default_value = "driver_database.ron",
+            display_order = 13
+        )]
+        pub database_file: PathBuf,
     }
 
     #[derive(Debug, Args)]
@@ -237,7 +242,8 @@ pub mod commandline_interface_template {
         #[clap(
             arg_enum,
             help = "The hardware to search drivers for.",
-            display_order = 21)]
+            display_order = 21
+        )]
         pub hardware: Option<HardwareKind>,
 
         #[clap(
@@ -250,10 +256,11 @@ pub mod commandline_interface_template {
 
         #[clap(
             long = "database",
-            help = "The `ron` database file to use for searching drivers.",
+            help = "Path to the `ron` database file to use for searching drivers.",
+            default_value = "driver_database.ron",
             display_order = 23
         )]
-        pub database_file: Option<PathBuf>,
+        pub database_file: PathBuf,
     }
 
     #[derive(Debug, Args)]
@@ -261,7 +268,8 @@ pub mod commandline_interface_template {
         #[clap(
             arg_enum,
             help = "The hardware to install drivers for.",
-            display_order = 31)]
+            display_order = 31
+        )]
         pub hardware: HardwareKind,
 
         #[clap(
@@ -274,9 +282,10 @@ pub mod commandline_interface_template {
 
         #[clap(
             long = "database",
-            help = "The `ron` database file to use for searching drivers.",
+            help = "Path to the `ron` database file to use for searching drivers.",
+            default_value = "driver_database.ron",
             display_order = 33
         )]
-        pub database_file: Option<PathBuf>,
+        pub database_file: PathBuf,
     }
 }

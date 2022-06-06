@@ -9,12 +9,4 @@ pub enum Error {
     Database {
         source: rustbreak::error::RustbreakError,
     },
-
-    #[snafu(
-        display("The argument \"{argument}\" is invalid. Permitted values are {{{allowed_arguments:#?}}}.")
-    )]
-    InvalidEnumArgument {
-        argument: String,
-        allowed_arguments: Vec<String>,
-    },
 }
