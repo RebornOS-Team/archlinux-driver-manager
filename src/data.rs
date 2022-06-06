@@ -1,4 +1,4 @@
-use crate::error::{DatabaseSnafu, Error};
+use crate::error::{DatabaseSnafu, InvalidEnumArgumentSnafu, Error};
 use rangemap::{RangeInclusiveMap, StepLite};
 use rustbreak::{deser::Ron, FileDatabase};
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -15,6 +15,21 @@ use std::{
 pub type DriverListing = RangeInclusiveMap<PciId, Vec<DriverRecord>>;
 
 // region: DATA MODEL
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    Serialize,
+    Deserialize,
+    clap::ArgEnum
+)]
+pub enum HardwareKind {
+    Graphics,
+    Ethernet,
+    Wireless,
+    Sound,        
+}
+
 #[derive(Debug)]
 pub struct DriverDatabase {
     inner: FileDatabase<DriverListing, Ron>,
@@ -119,6 +134,28 @@ pub enum ScriptKind {
 // endregion: DATA MODEL
 
 // region: IMPLEMENTATIONS
+
+impl HardwareKind {
+    pub fn all_to_strings() -> Vec<String> {
+        vec![
+            String::from("graphics"),
+            String::from("ethernet"),
+            String::from("wireless"),
+            String::from("sound"),
+        ]
+    }
+}
+
+impl Display for HardwareKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            &HardwareKind::Graphics => write!(f, "Graphics"),
+            &HardwareKind::Ethernet => write!(f, "Ethernet"),
+            &HardwareKind::Wireless => write!(f, "Wireless"),
+            &HardwareKind::Sound => write!(f, "Sound"),
+        }
+    }
+}
 
 impl DriverDatabase {
     pub fn try_new() -> Result<Self, Error> {

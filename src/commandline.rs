@@ -1,9 +1,12 @@
 pub use commandline_interface_template::*;
 
-use crate::{data::{DriverDatabase, DriverRecord, PciId}, actions::list};
+use crate::{
+    actions::{install, list, search},
+    data::{DriverDatabase, DriverRecord, PciId},
+};
 use clap::Parser;
-use owo_colors::{OwoColorize, Stream::Stdout};
-use crate::actions;
+use owo_colors::{OwoColorize, Stream::Stderr};
+use std::fmt::Display;
 
 pub struct CommandlineInterface {}
 
@@ -56,82 +59,87 @@ impl CommandlineInterface {
 
         match cli.command {
             Some(ActionCommand::List(list_action_arguments)) => {
-                match actions::list::list(list_action_arguments) {
-                    Ok(list_action_output) => list_action_output.print_select(cli.global_arguments),
-                    Err(error) => error.print_select(cli.global_arguments),
-                }
+                list::list(list_action_arguments).print_select(cli.global_arguments);
             }
             Some(ActionCommand::Search(search_action_arguments)) => {
-                let db = DriverDatabase::try_new().unwrap();
-                println!("Writing to Database");
-                db.write(|db| {
-                    db.insert(
-                        PciId::range_inclusive("1234:5678", "1234:56ab")
-                            .expect("Invalid PCI IDs supplied"),
-                        vec![DriverRecord::default()],
-                    );
-                    println!("Entries: \n{:#?}", db);
-                })
-                .unwrap();
-
-                println!("Syncing Database");
-                db.save().unwrap();
-
-                println!("Loading Database");
-                db.load().unwrap();
-
-                println!("Reading from Database");
-                db.read(|db| {
-                    println!("Results:");
-                    println!("{:#?}", db);
-                })
-                .unwrap();
+                search::search(search_action_arguments).print_select(cli.global_arguments);
             }
-            Some(ActionCommand::Install(install_action_arguments)) => {}
-            None => {}
+            Some(ActionCommand::Install(install_action_arguments)) => {
+                install::install(install_action_arguments).print_select(cli.global_arguments);
+            }
+            None => {
+                list::list(cli.arguments).print_select(cli.global_arguments);
+            }
         }
     }
 }
 
-impl<T> CommandlinePrint for T
+impl<T, E> CommandlinePrint for Result<T, E>
 where
-    T: std::error::Error,
+    T: CommandlinePrint,
+    E: Display,
 {
     fn print(&self) {
-        let message = format!(
-            "{} {}",
-            "ERROR:".if_supports_color(Stdout, |text| text.red()),
-            self,
-        );
-        eprintln!("{}",message);
+        match self {
+            Ok(inner) => inner.print(),
+            Err(inner) => {
+                let message = format!(
+                    "{} {}",
+                    "ERROR:".if_supports_color(Stderr, |text| text.red()),
+                    inner,
+                );
+                eprintln!("{}", message);
+            }
+        }
     }
-
     fn print_json(&self) {
-        self.print();
-        println!("{{errors:[{}]}}", self,);
+        match self {
+            Ok(inner) => inner.print_json(),
+            Err(inner) => {
+                let message = format!(
+                    "{} {}",
+                    "ERROR:".if_supports_color(Stderr, |text| text.red()),
+                    inner,
+                );
+                eprintln!("{}", message);
+                println!("{{errors:[{}]}}", inner);
+            }
+        }
     }
-
     fn print_plain(&self) {
-        self.print();
-        println!("");
+        match self {
+            Ok(inner) => inner.print_plain(),
+            Err(inner) => {
+                let message = format!(
+                    "{} {}",
+                    "ERROR:".if_supports_color(Stderr, |text| text.red()),
+                    inner,
+                );
+                eprintln!("{}", message);
+                println!("");
+            }
+        }
     }
-
     fn print_debug(&self) {
-        self.print();
+        match self {
+            Ok(inner) => inner.print_debug(),
+            Err(inner) => {
+                let message = format!(
+                    "{} {}",
+                    "ERROR:".if_supports_color(Stderr, |text| text.red()),
+                    inner,
+                );
+                eprintln!("{}", message);
+            }
+        }
     }
-}
-
-impl<T, E> CommandlinePrint for Result<T,E>
-where,
-    T: CommandlinePrint,
-    E: CommandlinePrint,
-{
-
 }
 
 pub mod commandline_interface_template {
     use clap::{Args, Parser, Subcommand};
     use std::path::PathBuf;
+
+    use crate::data::HardwareKind;
 
     use super::CommandlineFlags;
 
@@ -209,10 +217,11 @@ pub mod commandline_interface_template {
     #[derive(Debug, Args)]
     pub struct ListActionArguments {
         #[clap(
+            arg_enum,
             help = "The hardware to list installed drivers for.",
             display_order = 11
         )]
-        pub hardware: Option<String>,
+        pub hardware: Option<HardwareKind>,
 
         #[clap(
             long = "tags",
@@ -225,8 +234,11 @@ pub mod commandline_interface_template {
 
     #[derive(Debug, Args)]
     pub struct SearchActionArguments {
-        #[clap(help = "The hardware to search drivers for.", display_order = 21)]
-        pub hardware: Option<String>,
+        #[clap(
+            arg_enum,
+            help = "The hardware to search drivers for.",
+            display_order = 21)]
+        pub hardware: Option<HardwareKind>,
 
         #[clap(
             long = "tags",
@@ -246,8 +258,11 @@ pub mod commandline_interface_template {
 
     #[derive(Debug, Args)]
     pub struct InstallActionArguments {
-        #[clap(help = "The hardware to install drivers for.", display_order = 31)]
-        pub hardware: Option<String>,
+        #[clap(
+            arg_enum,
+            help = "The hardware to install drivers for.",
+            display_order = 31)]
+        pub hardware: HardwareKind,
 
         #[clap(
             long = "tags",
