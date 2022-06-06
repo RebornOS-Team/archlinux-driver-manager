@@ -1,9 +1,11 @@
 use std::fmt::Display;
 
 use serde::{Serialize, Deserialize};
+use snafu::ResultExt;
 
 use crate::commandline::{ListActionArguments, CommandlinePrint};
-use crate::error::Error;
+use crate::data::{DriverDatabase, DriverRecord};
+use crate::error::{Error, DatabaseSnafu};
 
 #[derive(
     Default,
@@ -36,7 +38,22 @@ impl CommandlinePrint for ListActionOutput {
     }
 }
 
-pub fn list(list_arguments: ListActionArguments) -> Result<ListActionOutput, Error>{
+pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutput, Error> {
+    let db = DriverDatabase::try_with_database_path(list_action_arguments.database_file)?;
+    db.load().context(DatabaseSnafu{})?;
+    match &list_action_arguments.hardware {
+        Some(hardware) => {
+            db.read(|db| {
+                // if let Some(driver_listing) = db.get(hardware) {
+                //     driver_listing.iter().fold(Vec::<String>::new(), |acc, x| {
+                //         // acc.append()
+                //     } )
+                // }
+            });
+        },
+        None => todo!(),
+    }
+    // TODO: Make ListActionOutput smarter with a HashMap pointing to a list instead
     Ok(
         ListActionOutput::default()
     )

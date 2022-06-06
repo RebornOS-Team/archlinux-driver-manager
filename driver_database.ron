@@ -2,7 +2,7 @@
     Graphics: [
         (("abc1:fab2", "afa2:aaba"), [
             (
-                packages: [],
+                packages: [nvidia, something],
                 configs: [],
                 tags: [],
                 pre_install_script: None,
@@ -13,7 +13,7 @@
     Wireless: [
         (("aaba:fab2", "abaa:1231"), [
             (
-                packages: [],
+                packages: [nemo, thunar, dolphin, nautilus],
                 configs: [],
                 tags: [],
                 pre_install_script: None,
@@ -22,7 +22,7 @@
         ]),
         (("abaa:1241", "abaa:1251"), [
             (
-                packages: [],
+                packages: [gedit, vim, nano],
                 configs: [],
                 tags: [],
                 pre_install_script: None,
