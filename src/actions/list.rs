@@ -11,9 +11,10 @@ use std::{
     collections::HashMap,
     ops::{Deref, DerefMut},
 };
-use pacmanconf;
+use crate::arch::PackageManager;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct ListActionOutput {
     inner: HashMap<HardwareKind, Vec<InstalledPackage>>,
 }
@@ -72,7 +73,10 @@ impl CommandlinePrint for ListActionOutput {
     }
 
     fn print_json(&self) {
-        todo!();
+        println!("{}", serde_json::to_string(&self).unwrap_or_else(|err| {
+            eprintln!("The output could not be converted to JSON. Please try another output format...");
+            String::from("")
+        }));
     }
 
     fn print_plain(&self) {
@@ -132,5 +136,12 @@ pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutp
             })
             .context(DatabaseSnafu {})?,
     }
+
+    let package_manager = PackageManager::new();
+    println!("{:#?}", package_manager.get("linux"));
+    println!("{:#?}", package_manager.get("pacman"));
+    println!("{:#?}", package_manager.get("nvidia"));
+    println!("{:#?}", package_manager.get("nvidia-dkms"));
+    
     Ok(list_action_output)
-}
+}   
