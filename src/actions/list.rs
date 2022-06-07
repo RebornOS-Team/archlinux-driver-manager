@@ -73,7 +73,7 @@ impl CommandlinePrint for ListActionOutput {
     }
 
     fn print_json(&self) {
-        println!("{}", serde_json::to_string(&self).unwrap_or_else(|err| {
+        println!("{}", serde_json::to_string(&self).unwrap_or_else(|_| {
             eprintln!("The output could not be converted to JSON. Please try another output format...");
             String::from("")
         }));
@@ -98,29 +98,32 @@ impl CommandlinePrint for ListActionOutput {
 }
 
 pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutput, Error> {
-    let driver_database = DriverDatabase::try_with_database_path(list_action_arguments.database_file)?;
+    let driver_database =
+        DriverDatabase::try_with_database_path(list_action_arguments.database_file)?;
     let package_manager = PackageManager::new();
-    
+
     driver_database.load().context(DatabaseSnafu {})?;
-    let all_driver_packages = all_driver_packages(list_action_arguments.hardware, &driver_database)?;
- 
+    let all_driver_packages =
+        all_driver_packages(list_action_arguments.hardware, &driver_database)?;
+
     Ok(ListActionOutput {
         inner: installed_drivers(all_driver_packages, &package_manager),
     })
 }
 
-fn all_driver_packages(optional_hardware: Option<HardwareKind>, driver_database: &DriverDatabase) -> Result<HashMap<HardwareKind, Vec<String>>, Error> {
+fn all_driver_packages(
+    optional_hardware: Option<HardwareKind>,
+    driver_database: &DriverDatabase,
+) -> Result<HashMap<HardwareKind, Vec<String>>, Error> {
     let mut all_driver_packages = HashMap::<HardwareKind, Vec<String>>::new();
     match optional_hardware {
-        Some(hardware) => {
-            driver_database
+        Some(hardware) => driver_database
             .read(|hardware_listing| {
                 if let Some(driver_listing) = hardware_listing.get(&hardware) {
                     all_driver_packages.insert(hardware.to_owned(), driver_listing.all_packages());
                 }
             })
-            .context(DatabaseSnafu {})?
-        },
+            .context(DatabaseSnafu {})?,
         None => driver_database
             .read(|hardware_listing| {
                 all_driver_packages.extend(hardware_listing.all_packages().into_iter());
@@ -131,20 +134,30 @@ fn all_driver_packages(optional_hardware: Option<HardwareKind>, driver_database:
     Ok(all_driver_packages)
 }
 
-fn installed_drivers(all_driver_packages: HashMap<HardwareKind, Vec<String>>, package_manager: &PackageManager) -> HashMap<HardwareKind, Vec<InstalledPackage>> {
-    all_driver_packages.iter().filter_map(|hardware_entry| {
-        let installed_package_list: Vec<InstalledPackage> = hardware_entry.1.iter().filter_map(|package_name| {
-            package_manager.get(package_name).map(|package|{
-                InstalledPackage {
-                    name: package.name().to_owned(),
-                    version: package.version().to_string(),
-                }
-            })
-        }).collect();
-        if installed_package_list.len() > 0 {
-            Some((hardware_entry.0.to_owned(), installed_package_list))
-        } else {
-            None
-        }
-    }).collect()
+fn installed_drivers(
+    all_driver_packages: HashMap<HardwareKind, Vec<String>>,
+    package_manager: &PackageManager,
+) -> HashMap<HardwareKind, Vec<InstalledPackage>> {
+    all_driver_packages
+        .iter()
+        .filter_map(|hardware_entry| {
+            let installed_package_list: Vec<InstalledPackage> = hardware_entry
+                .1
+                .iter()
+                .filter_map(|package_name| {
+                    package_manager
+                        .get(package_name)
+                        .map(|package| InstalledPackage {
+                            name: package.name().to_owned(),
+                            version: package.version().to_string(),
+                        })
+                })
+                .collect();
+            if installed_package_list.len() > 0 {
+                Some((hardware_entry.0.to_owned(), installed_package_list))
+            } else {
+                None
+            }
+        })
+        .collect()
 }

@@ -7,7 +7,7 @@ pkgrel=1
 arch=('x86_64')
 pkgdesc="A driver manager for Arch Linux"
 license=('MPL-2.0')
-depends=()
+depends=('pacman')
 makedepends=('git'
              'rustup'
              'rust')
