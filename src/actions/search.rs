@@ -1,19 +1,45 @@
+use crate::data::DriverRecord;
+use crate::{
+    commandline::{CommandlinePrint, SearchActionArguments},
+    data::{DriverDatabase, HardwareKind},
+    error::{DatabaseSnafu, Error},
+};
+use owo_colors::{OwoColorize, Stream::Stdout};
+use serde::{Deserialize, Serialize};
+use snafu::ResultExt;
 use std::fmt::Display;
-use std::path::PathBuf;
-use serde::{Serialize, Deserialize};
-use crate::commandline::{SearchActionArguments, CommandlinePrint};
-use crate::data::{DriverDatabase, DriverRecord, PciId, HardwareKind, DriverListing};
-use crate::error::Error;
+use std::{
+    collections::HashMap,
+    ops::{Deref, DerefMut},
+};
+use aparato::{PCIDevice, Fetch};
 
-#[derive(
-    Default,
-    Debug,
-    Clone,
-    Serialize,
-    Deserialize,
-)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct SearchActionOutput {
-    inner: Vec<(String, String)>
+    inner: HashMap<HardwareKind, Vec<DriverRecord>>,
+}
+
+impl SearchActionOutput {
+    pub fn new() -> Self {
+        SearchActionOutput {
+            inner: HashMap::<HardwareKind, Vec<DriverRecord>>::new(),
+        }
+    }
+}
+
+impl Deref for SearchActionOutput {
+    type Target = HashMap<HardwareKind, Vec<DriverRecord>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl DerefMut for SearchActionOutput {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
 }
 
 impl Display for SearchActionOutput {
@@ -24,62 +50,71 @@ impl Display for SearchActionOutput {
 
 impl CommandlinePrint for SearchActionOutput {
     fn print(&self) {
+        for hardware in self.inner.iter() {
+            println!(
+                "{}",
+                hardware.0.if_supports_color(Stdout, |text| text.bold())
+            );
+            println!("");
+            for driver_record in hardware.1.iter() {
+                println!(
+                    "\tSearch tags: {:?}",
+                    driver_record.tags.if_supports_color(Stdout, |text| text.yellow())
+                );
+                println!(
+                    "\tName: {}",
+                    driver_record.name.if_supports_color(Stdout, |text| text.yellow())
+                );
+                println!(
+                    "\tDescription: {}",
+                    driver_record.description.if_supports_color(Stdout, |text| text.yellow())
+                );
+                println!(
+                    "\tPackages: {:?}",
+                    driver_record.packages.if_supports_color(Stdout, |text| text.yellow())
+                );                
+                println!("");
+            }
+        }
     }
 
     fn print_json(&self) {
+        println!("{}", serde_json::to_string(&self).unwrap_or_else(|_| {
+            eprintln!("The output could not be converted to JSON. Please try another output format...");
+            String::from("")
+        }));
     }
 
     fn print_plain(&self) {
+        for hardware in self.inner.iter() {
+            for driver_record in hardware.1.iter() {
+                println!(
+                    "{} {:?} {} {} {:?}",
+                    hardware.0.to_string().to_lowercase(),
+                    driver_record.tags,
+                    driver_record.name,
+                    driver_record.description,
+                    driver_record.packages,
+                );
+            }
+        }
     }
 
     fn print_debug(&self) {
+        self.print();
     }
 }
 
-pub fn search(search_arguments: SearchActionArguments) -> Result<SearchActionOutput, Error>{
-    let db = DriverDatabase::try_with_database_path(PathBuf::from("driver_database.ron")).unwrap();
-    println!("Writing to Database");
-    db.write(|db| {
-        db.insert(
-            HardwareKind::Graphics,
-            {
-                let mut driver_listing = DriverListing::new();
-                driver_listing.insert(PciId::range_inclusive("abc1:fab2", "afa2:aaba").unwrap(), vec![
-                    DriverRecord::default(),
-                ]);
-                driver_listing
-            },
-        );
-        db.insert(
-            HardwareKind::Wireless,
-            {
-                let mut driver_listing = DriverListing::new();
-                driver_listing.insert(PciId::range_inclusive("aaba:fab2", "abaa:1231").unwrap(), vec![
-                    DriverRecord::default(),
-                ]);
-                driver_listing.insert(PciId::range_inclusive("abaa:1241", "abaa:1251").unwrap(), vec![
-                    DriverRecord::default(),
-                ]);
-                driver_listing
-            },
-        );
-        println!("Entries: \n{:#?}", db);
+pub fn search(search_action_arguments: SearchActionArguments) -> Result<SearchActionOutput, Error> {
+    let driver_database =
+        DriverDatabase::try_with_database_path(search_action_arguments.database_file)?;
+
+    driver_database.load().context(DatabaseSnafu {})?;
+    
+    println!("{:?}", PCIDevice::fetch(Some(25)));
+
+    Ok(SearchActionOutput {
+        inner: HashMap::<HardwareKind, Vec<DriverRecord>>::new(),
     })
-    .unwrap();
-
-    println!("Syncing Database");
-    db.save().unwrap();
-
-    println!("Loading Database");
-    db.load().unwrap();
-
-    println!("Reading from Database");
-    db.read(|db| {
-        println!("Results:");
-        println!("{:#?}", db);
-    })
-    .unwrap();
-    Ok(
-        SearchActionOutput::default()
-    )
 }
+

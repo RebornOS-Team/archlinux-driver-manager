@@ -78,9 +78,11 @@ pub enum ParsePciIdError {
     Deserialize,
 )]
 pub struct DriverRecord {
-    pub packages: Vec<String>,
-    pub configs: Vec<ConfigRecord>,
+    pub name: String,
+    pub description: String,
     pub tags: Vec<String>,
+    pub packages: Vec<String>,
+    pub configs: Vec<ConfigRecord>,    
     pub pre_install_script: Option<Script>,
     pub post_install_script: Option<Script>,
 }
@@ -431,10 +433,12 @@ mod tests {
                 {
                     let mut driver_listing = DriverListing::new();
                     driver_listing.insert(PciId::range_inclusive("abc1:fab2", "afa2:aaba").unwrap(), vec![
-                        DriverRecord {
+                        DriverRecord {                            
+                            name: String::from("Graphics Driver 1"),
+                            description: String::from("Something about Graphics Driver 1"),
+                            tags: Vec::new(),
                             packages: vec!["dolphin", "thunar", "nautilus"].into_iter().map(From::from).collect(),
                             configs: vec![ConfigRecord::default()],
-                            tags: Vec::new(),
                             pre_install_script: None,
                             post_install_script: None,
                         },
@@ -448,18 +452,22 @@ mod tests {
                     let mut driver_listing = DriverListing::new();
                     driver_listing.insert(PciId::range_inclusive("aaba:fab2", "abaa:1231").unwrap(), vec![
                         DriverRecord {
+                            name: String::from("Wireless Driver 1"),
+                            description: String::from("Something about Wireless Driver 1"),
+                            tags: Vec::new(),
                             packages: vec!["vim", "helix", "code", "nano"].into_iter().map(From::from).collect(),
                             configs: vec![ConfigRecord::default()],
-                            tags: Vec::new(),
                             pre_install_script: None,
                             post_install_script: None,
                         },
                     ]);
                     driver_listing.insert(PciId::range_inclusive("abaa:1241", "abaa:1251").unwrap(), vec![
                         DriverRecord {
+                            name: String::from("Wireless Driver 2"),
+                            description: String::from("Something about Wireless Driver 2"),
+                            tags: Vec::new(),
                             packages: vec!["nvidia", "amd"].into_iter().map(From::from).collect(),
                             configs: vec![ConfigRecord::default()],
-                            tags: Vec::new(),
                             pre_install_script: None,
                             post_install_script: None,
                         },

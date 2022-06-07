@@ -35,4 +35,5 @@ pacmanconf = "2.0"
 
 # Miscellaneous
 snafu = "0.7"
+aparato = "6.0"
 
