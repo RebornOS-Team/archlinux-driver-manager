@@ -11,6 +11,7 @@ use std::{
     collections::HashMap,
     ops::{Deref, DerefMut},
 };
+use pacmanconf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ListActionOutput {
@@ -70,11 +71,27 @@ impl CommandlinePrint for ListActionOutput {
         }
     }
 
-    fn print_json(&self) {}
+    fn print_json(&self) {
+        todo!();
+    }
 
-    fn print_plain(&self) {}
+    fn print_plain(&self) {
+        for hardware in self.inner.iter() {
+            for package in hardware.1.iter() {
+                println!(
+                    "{} {} {}",
+                    hardware.0.to_string().to_lowercase(),
+                    package.name,
+                    package
+                        .version                        
+                );
+            }
+        }
+    }
 
-    fn print_debug(&self) {}
+    fn print_debug(&self) {
+        self.print();
+    }
 }
 
 pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutput, Error> {
@@ -95,7 +112,6 @@ pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutp
                             })
                             .collect(),
                     );
-                    // packages.append(&mut driver_listing.all_packages());
                 }
             })
             .context(DatabaseSnafu {})?,
@@ -113,10 +129,8 @@ pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutp
                             .collect(),
                     );
                 });
-                // packages.append(&mut db.all_packages());
             })
             .context(DatabaseSnafu {})?,
     }
-    // println!("{:#?}", packages);
     Ok(list_action_output)
 }
