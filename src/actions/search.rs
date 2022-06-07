@@ -111,7 +111,7 @@ pub fn search(search_action_arguments: SearchActionArguments) -> Result<SearchAc
 
     driver_database.load().context(DatabaseSnafu {})?;
     
-    println!("{:?}", PCIDevice::fetch(Some(25)));
+    println!("{:#?}", PCIDevice::fetch(Some(25)));
 
     Ok(SearchActionOutput {
         inner: HashMap::<HardwareKind, Vec<DriverRecord>>::new(),
