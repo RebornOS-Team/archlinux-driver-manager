@@ -206,16 +206,10 @@ impl HardwareListing {
         }
     }
 
-    pub fn all_packages(&self) -> Vec<String> {
-        let mut packages = Vec::<String>::new();
-        packages.append(self.iter().fold(
-            &mut Vec::<String>::new(),
-            |acc, x| {
-                acc.append(&mut x.1.all_packages());
-                acc
-            },
-        ));
-        packages
+    pub fn all_packages(&self) -> HashMap<HardwareKind, Vec<String>> {
+        self.iter().map(|hardware_entry| {
+            (hardware_entry.0.to_owned(), hardware_entry.1.all_packages())
+        }).collect()
     }
 }
 
@@ -248,16 +242,11 @@ impl DriverListing {
 
     pub fn all_packages(&self) -> Vec<String> {
         let mut packages = Vec::<String>::new();
-        packages.append(self.iter().fold(
-            &mut Vec::<String>::new(),
-            |acc, x| {
-                acc.append(x.1.iter().fold(&mut Vec::<String>::new(), |acc, x| {
-                    acc.append(&mut x.packages.clone());
-                    acc
-                }));
-                acc
-            },
-        ));
+        for pci_entry in self.iter() {
+            for driver_record in pci_entry.1 {
+                packages.extend(driver_record.packages.to_owned().into_iter());
+            }
+        }
         packages
     }
 }

@@ -1,3 +1,4 @@
+use crate::arch::PackageManager;
 use crate::{
     commandline::{CommandlinePrint, ListActionArguments},
     data::{DriverDatabase, HardwareKind},
@@ -11,7 +12,6 @@ use std::{
     collections::HashMap,
     ops::{Deref, DerefMut},
 };
-use crate::arch::PackageManager;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -86,8 +86,7 @@ impl CommandlinePrint for ListActionOutput {
                     "{} {} {}",
                     hardware.0.to_string().to_lowercase(),
                     package.name,
-                    package
-                        .version                        
+                    package.version
                 );
             }
         }
@@ -99,49 +98,53 @@ impl CommandlinePrint for ListActionOutput {
 }
 
 pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutput, Error> {
-    let db = DriverDatabase::try_with_database_path(list_action_arguments.database_file)?;
-    db.load().context(DatabaseSnafu {})?;
-    let mut list_action_output = ListActionOutput::new();
-    match &list_action_arguments.hardware {
-        Some(hardware) => db
-            .read(|db| {
-                if let Some(driver_listing) = db.get(hardware) {
-                    list_action_output.entry(*hardware).or_insert(
-                        driver_listing
-                            .all_packages()
-                            .iter()
-                            .map(|package| InstalledPackage {
-                                name: package.to_owned(),
-                                version: String::from("0.0.0"),
-                            })
-                            .collect(),
-                    );
+    let driver_database = DriverDatabase::try_with_database_path(list_action_arguments.database_file)?;
+    let package_manager = PackageManager::new();
+    
+    driver_database.load().context(DatabaseSnafu {})?;
+    let all_driver_packages = all_driver_packages(list_action_arguments.hardware, &driver_database)?;
+ 
+    Ok(ListActionOutput {
+        inner: installed_drivers(all_driver_packages, &package_manager),
+    })
+}
+
+fn all_driver_packages(optional_hardware: Option<HardwareKind>, driver_database: &DriverDatabase) -> Result<HashMap<HardwareKind, Vec<String>>, Error> {
+    let mut all_driver_packages = HashMap::<HardwareKind, Vec<String>>::new();
+    match optional_hardware {
+        Some(hardware) => {
+            driver_database
+            .read(|hardware_listing| {
+                if let Some(driver_listing) = hardware_listing.get(&hardware) {
+                    all_driver_packages.insert(hardware.to_owned(), driver_listing.all_packages());
                 }
             })
-            .context(DatabaseSnafu {})?,
-        None => db
-            .read(|db| {
-                db.iter().for_each(|item| {
-                    list_action_output.entry(*item.0).or_insert(
-                        item.1
-                            .all_packages()
-                            .iter()
-                            .map(|package| InstalledPackage {
-                                name: package.to_owned(),
-                                version: String::from("0.0.0"),
-                            })
-                            .collect(),
-                    );
-                });
+            .context(DatabaseSnafu {})?
+        },
+        None => driver_database
+            .read(|hardware_listing| {
+                all_driver_packages.extend(hardware_listing.all_packages().into_iter());
             })
             .context(DatabaseSnafu {})?,
     }
 
-    let package_manager = PackageManager::new();
-    println!("{:#?}", package_manager.get("linux"));
-    println!("{:#?}", package_manager.get("pacman"));
-    println!("{:#?}", package_manager.get("nvidia"));
-    println!("{:#?}", package_manager.get("nvidia-dkms"));
-    
-    Ok(list_action_output)
-}   
+    Ok(all_driver_packages)
+}
+
+fn installed_drivers(all_driver_packages: HashMap<HardwareKind, Vec<String>>, package_manager: &PackageManager) -> HashMap<HardwareKind, Vec<InstalledPackage>> {
+    all_driver_packages.iter().filter_map(|hardware_entry| {
+        let installed_package_list: Vec<InstalledPackage> = hardware_entry.1.iter().filter_map(|package_name| {
+            package_manager.get(package_name).map(|package|{
+                InstalledPackage {
+                    name: package.name().to_owned(),
+                    version: package.version().to_string(),
+                }
+            })
+        }).collect();
+        if installed_package_list.len() > 0 {
+            Some((hardware_entry.0.to_owned(), installed_package_list))
+        } else {
+            None
+        }
+    }).collect()
+}

@@ -1,9 +1,6 @@
 use std::fmt::Display;
 use std::path::PathBuf;
-
-use rangemap::RangeInclusiveMap;
 use serde::{Serialize, Deserialize};
-
 use crate::commandline::{SearchActionArguments, CommandlinePrint};
 use crate::data::{DriverDatabase, DriverRecord, PciId, HardwareKind, DriverListing};
 use crate::error::Error;
