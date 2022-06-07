@@ -46,7 +46,7 @@ pub fn search(search_arguments: SearchActionArguments) -> Result<SearchActionOut
         db.insert(
             HardwareKind::Graphics,
             {
-                let mut driver_listing = RangeInclusiveMap::new();
+                let mut driver_listing = DriverListing::new();
                 driver_listing.insert(PciId::range_inclusive("abc1:fab2", "afa2:aaba").unwrap(), vec![
                     DriverRecord::default(),
                 ]);
@@ -56,7 +56,7 @@ pub fn search(search_arguments: SearchActionArguments) -> Result<SearchActionOut
         db.insert(
             HardwareKind::Wireless,
             {
-                let mut driver_listing = RangeInclusiveMap::new();
+                let mut driver_listing = DriverListing::new();
                 driver_listing.insert(PciId::range_inclusive("aaba:fab2", "abaa:1231").unwrap(), vec![
                     DriverRecord::default(),
                 ]);

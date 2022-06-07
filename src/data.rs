@@ -12,21 +12,32 @@ use std::{
     str::FromStr,
 };
 
-pub type HardwareListing = HashMap<HardwareKind, DriverListing>;
-pub type DriverListing = RangeInclusiveMap<PciId, Vec<DriverRecord>>;
-
 // region: DATA MODEL
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, clap::ArgEnum)]
-pub enum HardwareKind {
-    Graphics,
-    Ethernet,
-    Wireless,
-    Sound,
-}
-
 #[derive(Debug)]
 pub struct DriverDatabase {
     inner: FileDatabase<HardwareListing, Ron>,
+}
+
+#[derive(
+    Clone,
+    Debug,
+    Serialize,
+    Deserialize,
+)]
+#[serde(transparent)]
+pub struct HardwareListing {
+    inner: HashMap<HardwareKind, DriverListing>,
+}
+
+#[derive(
+    Clone,
+    Debug,
+    Serialize,
+    Deserialize,
+)]
+#[serde(transparent)]
+pub struct DriverListing {
+    inner: RangeInclusiveMap<PciId, Vec<DriverRecord>>,
 }
 
 #[derive(
@@ -40,6 +51,14 @@ pub struct DriverDatabase {
 )]
 pub struct PciId {
     value: u32,
+}
+
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, clap::ArgEnum)]
+pub enum HardwareKind {
+    Graphics,
+    Ethernet,
+    Wireless,
+    Sound,
 }
 
 #[derive(Clone, Debug)]
@@ -177,6 +196,89 @@ impl Deref for DriverDatabase {
 impl DerefMut for DriverDatabase {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner
+    }
+}
+
+impl HardwareListing {
+    pub fn new() -> Self {
+        Self {
+            inner: HashMap::<HardwareKind, DriverListing>::new(),
+        }
+    }
+
+    pub fn all_packages(&self) -> Vec<String> {
+        let mut packages = Vec::<String>::new();
+        packages.append(self.iter().fold(
+            &mut Vec::<String>::new(),
+            |acc, x| {
+                acc.append(&mut x.1.all_packages());
+                acc
+            },
+        ));
+        packages
+    }
+}
+
+impl Deref for HardwareListing {
+    type Target = HashMap<HardwareKind, DriverListing>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl DerefMut for HardwareListing {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
+
+impl Default for HardwareListing {
+    fn default() -> Self {
+        Self { inner: Default::default() }
+    }
+}
+
+impl DriverListing {
+    pub fn new() -> Self {
+        Self {
+            inner: RangeInclusiveMap::<PciId, Vec<DriverRecord>>::new(),
+        }
+    }
+
+    pub fn all_packages(&self) -> Vec<String> {
+        let mut packages = Vec::<String>::new();
+        packages.append(self.iter().fold(
+            &mut Vec::<String>::new(),
+            |acc, x| {
+                acc.append(x.1.iter().fold(&mut Vec::<String>::new(), |acc, x| {
+                    acc.append(&mut x.packages.clone());
+                    acc
+                }));
+                acc
+            },
+        ));
+        packages
+    }
+}
+
+impl Deref for DriverListing {
+    type Target = RangeInclusiveMap<PciId, Vec<DriverRecord>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl DerefMut for DriverListing {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
+
+impl Default for DriverListing {
+    fn default() -> Self {
+        Self { inner: Default::default() }
     }
 }
 
