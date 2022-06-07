@@ -416,4 +416,73 @@ impl Default for ScriptKind {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+    use crate::data::*;
+
+    #[test]
+    pub fn test_sample_database() {
+        let db = DriverDatabase::try_with_database_path(PathBuf::from("driver_database.ron")).unwrap();
+        println!("Writing to Database");
+        db.write(|db| {
+            db.insert(
+                HardwareKind::Graphics,
+                {
+                    let mut driver_listing = DriverListing::new();
+                    driver_listing.insert(PciId::range_inclusive("abc1:fab2", "afa2:aaba").unwrap(), vec![
+                        DriverRecord {
+                            packages: vec!["dolphin", "thunar", "nautilus"].into_iter().map(From::from).collect(),
+                            configs: vec![ConfigRecord::default()],
+                            tags: Vec::new(),
+                            pre_install_script: None,
+                            post_install_script: None,
+                        },
+                    ]);
+                    driver_listing
+                },
+            );
+            db.insert(
+                HardwareKind::Wireless,
+                {
+                    let mut driver_listing = DriverListing::new();
+                    driver_listing.insert(PciId::range_inclusive("aaba:fab2", "abaa:1231").unwrap(), vec![
+                        DriverRecord {
+                            packages: vec!["vim", "helix", "code", "nano"].into_iter().map(From::from).collect(),
+                            configs: vec![ConfigRecord::default()],
+                            tags: Vec::new(),
+                            pre_install_script: None,
+                            post_install_script: None,
+                        },
+                    ]);
+                    driver_listing.insert(PciId::range_inclusive("abaa:1241", "abaa:1251").unwrap(), vec![
+                        DriverRecord {
+                            packages: vec!["nvidia", "amd"].into_iter().map(From::from).collect(),
+                            configs: vec![ConfigRecord::default()],
+                            tags: Vec::new(),
+                            pre_install_script: None,
+                            post_install_script: None,
+                        },
+                    ]);
+                    driver_listing
+                },
+            );
+            println!("Entries: \n{:#?}", db);
+        })
+        .unwrap();
+
+        println!("Syncing Database");
+        db.save().unwrap();
+
+        println!("Loading Database");
+        db.load().unwrap();
+
+        println!("Reading from Database");
+        db.read(|db| {
+            println!("Results:");
+            println!("{:#?}", db);
+        })
+        .unwrap();
+    }
+}
 // endregion: IMPLEMENTATIONS

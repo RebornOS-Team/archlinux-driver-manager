@@ -1,20 +1,20 @@
 {
-    Graphics: [
-        (("abc1:fab2", "afa2:aaba"), [
-            (
-                packages: ["dolphin", "thunar", "nautilus"],
-                configs: [],
-                tags: [],
-                pre_install_script: None,
-                post_install_script: None,
-            ),
-        ]),
-    ],
     Wireless: [
         (("aaba:fab2", "abaa:1231"), [
             (
-                packages: ["vim", "helix", "code", "nano"],
-                configs: [],
+                packages: [
+                    "vim",
+                    "helix",
+                    "code",
+                    "nano",
+                ],
+                configs: [
+                    (
+                        format: Ini,
+                        path: None,
+                        entries: {},
+                    ),
+                ],
                 tags: [],
                 pre_install_script: None,
                 post_install_script: None,
@@ -22,8 +22,38 @@
         ]),
         (("abaa:1241", "abaa:1251"), [
             (
-                packages: ["nvidia", "amd"],
-                configs: [],
+                packages: [
+                    "nvidia",
+                    "amd",
+                ],
+                configs: [
+                    (
+                        format: Ini,
+                        path: None,
+                        entries: {},
+                    ),
+                ],
+                tags: [],
+                pre_install_script: None,
+                post_install_script: None,
+            ),
+        ]),
+    ],
+    Graphics: [
+        (("abc1:fab2", "afa2:aaba"), [
+            (
+                packages: [
+                    "dolphin",
+                    "thunar",
+                    "nautilus",
+                ],
+                configs: [
+                    (
+                        format: Ini,
+                        path: None,
+                        entries: {},
+                    ),
+                ],
                 tags: [],
                 pre_install_script: None,
                 post_install_script: None,
