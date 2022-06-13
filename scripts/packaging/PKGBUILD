@@ -54,7 +54,7 @@ package() {
     (
         cd "$PROJECT_DIRECTORY" && \
         install -d -m 755 "${pkgdir}/${instdir}"
-        install -m 644 "driver_database.ron" "${pkgdir}/${instdir}/" 
+        install -m 644 "database.ron" "${pkgdir}/${instdir}/" 
     )
 
     # Copy the binaries

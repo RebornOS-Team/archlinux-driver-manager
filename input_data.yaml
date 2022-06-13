@@ -1,0 +1,66 @@
+---
+
+#=============
+- name: Nvidia
+#=============
+  description: "Graphics driver for Nvidia GPU from the `nvidia` package found in the official Arch Linux `Extra` repository."
+  hardware_type: graphics
+  tags:
+    - proprietary
+    - closed source
+    - non free
+  ids:
+    - pci:
+        vendor: 10de 
+        devices: [1381, 1392, 139a, 139b, 13b0, 1340, 1341, 1346, 1347, 134d, 13c0, 13c2, 13d7, 13d8, 13d9, 1401, 1407, 1427, 15f7, 15f8, 15f9, 1b00, 1b02, 1b06, 1b30, 1b38, 1b80, 1b81, 1b82, 1b83, 1b84, 1ba0, 1ba1, 1ba2, 1bb0, 1bb3, 1bb6, 1bb7, 1bb8, 1be0, 1be1, 1c02, 1c03, 1c20, 1c23, 1c60, 1c61, 1c62, 1c81, 1c82, 1c83, 1c8c, 1c8d, 1c8f, 1c92, 1d01, 1d10, 1d12, 1d81, 1db1, 1db4, 1db5, 1db6, 1dba, 1e02, 1e04, 1e07, 1e30, 1e30, 1e3c, 1e82, 1e87, 1e89, 1e90, 1eb0, 1eb1, 1ed0, 1f02, 1f07, 1f08, 1f10, 1f11, 1f50, 1f51, 2182, 2184, 1f82, 1f91]
+  packages:
+    - nvidia
+  configurations: 
+    - format: ini
+      path: ~/temp/myconf.conf
+      entries: 
+        - "hello: world" 
+  pre_install:
+    path: dummy_pre.py
+    language: py    
+  post_install: 
+    path: dummy_post.sh
+    language: sh
+
+#==================
+- name: Nvidia Beta
+#==================
+  description: "Beta graphics driver for Nvidia GPU from the `nvidia-beta` package found in the Arch user repository."
+  hardware_type: graphics
+  tags:
+    - proprietary
+    - closed source
+    - non free
+    - beta
+  ids:
+    - pci:
+        vendor: 10de 
+        devices: [1381, 1392, 139a, 139b, 13b0, 1340, 1341, 1346, 1347, 134d, 13c0, 13c2, 13d7, 13d8, 13d9, 1401, 1407, 1427, 15f7, 15f8, 15f9, 1b00, 1b02, 1b06, 1b30, 1b38, 1b80, 1b81, 1b82, 1b83, 1b84, 1ba0, 1ba1, 1ba2, 1bb0, 1bb3, 1bb6, 1bb7, 1bb8, 1be0, 1be1, 1c02, 1c03, 1c20, 1c23, 1c60, 1c61, 1c62, 1c81, 1c82, 1c83, 1c8c, 1c8d, 1c8f, 1c92, 1d01, 1d10, 1d12, 1d81, 1db1, 1db4, 1db5, 1db6, 1dba, 1e02, 1e04, 1e07, 1e30, 1e30, 1e3c, 1e82, 1e87, 1e89, 1e90, 1eb0, 1eb1, 1ed0, 1f02, 1f07, 1f08, 1f10, 1f11, 1f50, 1f51, 2182, 2184, 1f82, 1f91]
+  packages_aur:
+    - nvidia-beta
+
+#==================
+- name: Nvidia Open
+#==================
+  description: "Graphics driver for Nvidia GPU from the `nvidia-open` package found in the official Arch Linux `Extra` repository."
+  hardware_type: graphics
+  tags:
+    - proprietary
+    - closed source
+    - open source
+    - free
+    - non free
+    - alpha
+  ids:
+    - pci:
+        vendor: 10de 
+        devices: [1e02, 1e04, 1e07, 1e30, 1e30, 1e3c, 1e82, 1e87, 1e89, 1e90, 1eb0, 1eb1, 1ed0, 1f02, 1f07, 1f08, 1f10, 1f11, 1f50, 1f51, 2182, 2184, 1f82, 1f91]
+  packages:
+    - nvidia-open
+
+    

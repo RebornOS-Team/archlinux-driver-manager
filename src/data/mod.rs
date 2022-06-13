@@ -1,3 +1,6 @@
+pub mod database;
+pub mod input;
+
 use crate::error::{DatabaseSnafu, Error};
 use rangemap::{RangeInclusiveMap, StepLite};
 use rustbreak::{deser::Ron, FileDatabase};
@@ -12,7 +15,24 @@ use std::{
     str::FromStr,
 };
 
-// region: DATA MODEL
+#[derive(Clone, Debug)]
+
+pub enum SetFragment<T> {
+    Individual {
+        value: T
+    },
+    Range {
+        value: Range<T>
+    },
+    InclusiveRange {
+        value: RangeInclusive<T>
+    },
+}
+
+pub struct DiscreteSet<T: Eq + Ord> {
+    fragments: SetFragment<T>,
+}
+
 #[derive(Debug)]
 pub struct DriverDatabase {
     inner: FileDatabase<HardwareListing, Ron>,
@@ -145,10 +165,6 @@ pub enum ScriptKind {
     JavaScript,
     Shell,
 }
-
-// endregion: DATA MODEL
-
-// region: IMPLEMENTATIONS
 
 impl HardwareKind {
     pub fn all_to_strings() -> Vec<String> {
@@ -425,7 +441,7 @@ mod tests {
 
     #[test]
     pub fn test_sample_database() {
-        let db = DriverDatabase::try_with_database_path(PathBuf::from("driver_database.ron")).unwrap();
+        let db = DriverDatabase::try_with_database_path(PathBuf::from("database.ron")).unwrap();
         println!("Writing to Database");
         db.write(|db| {
             db.insert(
@@ -493,4 +509,4 @@ mod tests {
         .unwrap();
     }
 }
-// endregion: IMPLEMENTATIONS
+

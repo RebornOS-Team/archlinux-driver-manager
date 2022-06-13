@@ -231,7 +231,7 @@ pub mod commandline_interface_template {
         #[clap(
             long = "database",
             help = "Path to the `ron` database file to use for recognizing drivers.",
-            default_value = "driver_database.ron",
+            default_value = "database.ron",
             display_order = 13
         )]
         pub database_file: PathBuf,
@@ -257,7 +257,7 @@ pub mod commandline_interface_template {
         #[clap(
             long = "database",
             help = "Path to the `ron` database file to use for searching drivers.",
-            default_value = "driver_database.ron",
+            default_value = "database.ron",
             display_order = 23
         )]
         pub database_file: PathBuf,
@@ -283,7 +283,7 @@ pub mod commandline_interface_template {
         #[clap(
             long = "database",
             help = "Path to the `ron` database file to use for searching drivers.",
-            default_value = "driver_database.ron",
+            default_value = "database.ron",
             display_order = 33
         )]
         pub database_file: PathBuf,
