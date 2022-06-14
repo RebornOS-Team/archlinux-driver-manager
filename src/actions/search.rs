@@ -106,7 +106,7 @@ impl CommandlinePrint for SearchActionOutput {
 
 pub fn search(search_action_arguments: SearchActionArguments) -> Result<SearchActionOutput, Error> {
     let driver_database =
-        DriverDatabase::try_with_database_path(search_action_arguments.database_file)?;
+        DriverDatabase::load_with_database_path(search_action_arguments.database_file)?;
 
     driver_database.load().context(DatabaseSnafu {})?;
     

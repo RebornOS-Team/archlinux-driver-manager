@@ -99,7 +99,7 @@ impl CommandlinePrint for ListActionOutput {
 
 pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutput, Error> {
     let driver_database =
-        DriverDatabase::try_with_database_path(list_action_arguments.database_file)?;
+        DriverDatabase::load_with_database_path(list_action_arguments.database_file)?;
     let package_manager = PackageManager::new();
 
     driver_database.load().context(DatabaseSnafu {})?;

@@ -71,15 +71,15 @@ pub struct UsbIdList {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Script {
-    pub path: String,
-    pub language: String,
+    pub path: PathBuf,
+    pub language: ScriptKind,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Configuration {
     pub format: ConfigurationFormat,
     pub path: PathBuf,
-    pub entries: HashMap<String, String>,
+    pub entry_map: HashMap<String, String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -98,6 +98,18 @@ pub enum ConfigurationFormat {
 
     #[serde(alias="XML", alias="xml")]
     Xml,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ScriptKind {
+    #[serde(alias="Py", alias="py")]
+    Python,
+
+    #[serde(alias="Js", alias="js")]
+    JavaScript,
+
+    #[serde(alias="Sh", alias="sh")]
+    Shell,
 }
 
 impl Default for HardwareKind {
@@ -156,20 +168,20 @@ mod tests {
                 Configuration {
                     format: ConfigurationFormat::Ini,
                     path: "~/temp/myconf.conf".into(),
-                    entries: {
-                        let entries = HashMap::new();
-                        entries.insert("Hello".to_string(), "World".to_string());
-                        entries
+                    entry_map: {
+                        let mut entry_map = HashMap::new();
+                        entry_map.insert("Hello".to_string(), "World".to_string());
+                        entry_map
                     },
                 }
             ],
             pre_install: Some(Script {
-                path: "dummy_pre.py".to_string(),
-                language: "py".to_string(), 
+                path: "dummy_pre.py".into(),
+                language: ScriptKind::Python, 
             }),
             post_install: Some(Script {
-                path: "dummy_post.sh".to_string(),
-                language: "sh".to_string(), 
+                path: "dummy_post.sh".into(),
+                language: ScriptKind::Shell, 
             }),
         };
         let serialized_string = serde_yaml::to_string(&driver_entry_1).unwrap();

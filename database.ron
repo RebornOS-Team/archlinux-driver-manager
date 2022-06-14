@@ -1,69 +1,511 @@
 {
-    Wireless: [
-        (("aaba:fab2", "abaa:1231"), [
+    Graphics: {
+        [
+            Pci((
+                vendor_id: 4318,
+                device_id: 7682,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7684,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7687,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7728,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7740,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7810,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7815,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7817,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7824,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7856,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7857,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7888,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7938,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7943,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7944,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7952,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7953,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8016,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8017,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8066,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8081,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8578,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8580,
+            )),
+        ]: [
             (
-                name: "Wireless Driver 1",
-                description: "Something about Wireless Driver 1",
-                tags: [],
+                name: "Nvidia Open",
+                description: "Graphics driver for Nvidia GPU from the `nvidia-open` package found in the official Arch Linux `Extra` repository.",
+                tags: [
+                    "proprietary",
+                    "closed source",
+                    "open source",
+                    "free",
+                    "non free",
+                    "alpha",
+                ],
                 packages: [
-                    "vim",
-                    "helix",
-                    "code",
-                    "nano",
+                    "nvidia-open",
                 ],
-                configurations: [
-                    (
-                        format: Ini,
-                        path: None,
-                        entries: {},
-                    ),
-                ],
+                configurations: [],
                 pre_install_script: None,
                 post_install_script: None,
             ),
-        ]),
-        (("abaa:1241", "abaa:1251"), [
+        ],
+        [
+            Pci((
+                vendor_id: 4318,
+                device_id: 4928,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 4929,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 4934,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 4935,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 4941,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 4993,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5010,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5018,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5019,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5040,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5056,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5058,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5079,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5080,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5081,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5121,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5127,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5159,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5623,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5624,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 5625,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 6912,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 6914,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 6918,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 6960,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 6968,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7040,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7041,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7042,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7043,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7044,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7072,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7073,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7074,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7088,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7091,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7094,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7095,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7096,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7136,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7137,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7170,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7171,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7200,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7203,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7264,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7265,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7266,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7297,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7298,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7299,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7308,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7309,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7311,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7314,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7425,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7440,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7442,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7553,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7601,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7604,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7605,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7606,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7610,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7682,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7684,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7687,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7728,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7740,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7810,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7815,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7817,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7824,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7856,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7857,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7888,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7938,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7943,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7944,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7952,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7953,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8016,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8017,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8066,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8081,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8578,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8580,
+            )),
+        ]: [
             (
-                name: "Wireless Driver 2",
-                description: "Something about Wireless Driver 2",
-                tags: [],
+                name: "Nvidia",
+                description: "Graphics driver for Nvidia GPU from the `nvidia` package found in the official Arch Linux `Extra` repository.",
+                tags: [
+                    "proprietary",
+                    "closed source",
+                    "non free",
+                ],
                 packages: [
                     "nvidia",
-                    "amd",
                 ],
                 configurations: [
                     (
                         format: Ini,
-                        path: None,
-                        entries: {},
+                        path: "~/temp/myconf.conf",
+                        entry_map: {
+                            "hello": "world",
+                        },
                     ),
                 ],
-                pre_install_script: None,
-                post_install_script: None,
+                pre_install_script: Some((
+                    path: "dummy_pre.py",
+                    script_kind: Python,
+                )),
+                post_install_script: Some((
+                    path: "dummy_post.sh",
+                    script_kind: Shell,
+                )),
             ),
-        ]),
-    ],
-    Graphics: [
-        (("abc1:fab2", "afa2:aaba"), [
             (
-                name: "Graphics Driver 1",
-                description: "Something about Graphics Driver 1",
-                tags: [],
-                packages: [
-                    "dolphin",
-                    "thunar",
-                    "nautilus",
+                name: "Nvidia Beta",
+                description: "Beta graphics driver for Nvidia GPU from the `nvidia-beta` package found in the Arch user repository.",
+                tags: [
+                    "proprietary",
+                    "closed source",
+                    "non free",
+                    "beta",
                 ],
-                configurations: [
-                    (
-                        format: Ini,
-                        path: None,
-                        entries: {},
-                    ),
-                ],
+                packages: [],
+                configurations: [],
                 pre_install_script: None,
                 post_install_script: None,
             ),
-        ]),
-    ],
+        ],
+    },
 }

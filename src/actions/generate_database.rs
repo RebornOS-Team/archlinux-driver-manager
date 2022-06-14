@@ -1,13 +1,11 @@
-use std::collections::BTreeSet;
-
-use crate::data::{database, input_file};
 use crate::{
     commandline::{CommandlinePrint, GenerateDatabaseActionArguments},
+    data::{database, input_file},
     error::Error,
 };
 use owo_colors::{OwoColorize, Stream::Stdout};
-use rustbreak::FileDatabase;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct GenerateDatabaseActionOutput {
@@ -50,55 +48,43 @@ impl CommandlinePrint for GenerateDatabaseActionOutput {
 fn convert_hardware_ids(
     input_hardware_ids: Vec<input_file::HardwareIdEntry>,
 ) -> BTreeSet<database::HardwareId> {
-    let btree_set = BTreeSet::<database::HardwareId>::new();
+    let mut btree_set = BTreeSet::<database::HardwareId>::new();
     for input_hardware_id in input_hardware_ids {
         match input_hardware_id {
             input_file::HardwareIdEntry::Pci(pci_id_list) => {
-                let vendor_id = pci_id_list.vendor.parse().unwrap_or_else(|vendor| {
-                    println!(
-                        "{}: {}",
-                        "Error: Invalid vendor ID".if_supports_color(Stdout, |text| text.red()),
-                        vendor
-                    );
-                    0x0000
-                });
+                let vendor = pci_id_list.vendor;
                 for device in pci_id_list.devices {
-                    btree_set.insert(database::HardwareId::Pci(database::PciId {
-                        vendor_id: vendor_id,
-                        device_id: device.parse().unwrap_or_else(|device| {
-                            println!(
-                                "{}: {}",
-                                "Error: Invalid PCI device ID"
-                                    .if_supports_color(Stdout, |text| text.red()),
-                                device
-                            );
-                            0x0000
-                        }),
-                    }));
+                    btree_set.insert(database::HardwareId::Pci((vendor.as_ref(), device.as_ref()).try_into().unwrap_or_else(|error| {
+                        println!(
+                            "{}({}:{})...{}",
+                            "Error: Invalid PCI ID ".if_supports_color(Stdout, |text| text.red()),
+                            vendor.if_supports_color(Stdout, |text| text.bold()),
+                            device.if_supports_color(Stdout, |text| text.bold()),
+                            error
+                        );
+                        database::PciId {
+                            vendor_id: 0x0000,
+                            device_id: 0x0000,
+                        }
+                    })));                    
                 }
             }
             input_file::HardwareIdEntry::Usb(usb_id_list) => {
-                let vendor_id = usb_id_list.vendor.parse().unwrap_or_else(|vendor| {
-                    println!(
-                        "{}: {}",
-                        "Error: Invalid vendor ID".if_supports_color(Stdout, |text| text.red()),
-                        vendor
-                    );
-                    0x0000
-                });
+                let vendor = usb_id_list.vendor;
                 for device in usb_id_list.devices {
-                    btree_set.insert(database::HardwareId::Usb(database::UsbId {
-                        vendor_id: vendor_id,
-                        device_id: device.parse().unwrap_or_else(|device| {
-                            println!(
-                                "{}: {}",
-                                "Error: Invalid USB device ID"
-                                    .if_supports_color(Stdout, |text| text.red()),
-                                device
-                            );
-                            0x0000
-                        }),
-                    }));
+                    btree_set.insert(database::HardwareId::Usb((vendor.as_ref(), device.as_ref()).try_into().unwrap_or_else(|error| {
+                        println!(
+                            "{}({}:{})...{}",
+                            "Error: Invalid USB ID ".if_supports_color(Stdout, |text| text.red()),
+                            vendor.if_supports_color(Stdout, |text| text.bold()),
+                            device.if_supports_color(Stdout, |text| text.bold()),
+                            error
+                        );
+                        database::UsbId {
+                            vendor_id: 0x0000,
+                            device_id: 0x0000,
+                        }
+                    })));                    
                 }
             }
         }
@@ -130,12 +116,17 @@ pub fn generate_database(
                     description: driver_entry.description,
                     tags: driver_entry.tags,
                     packages: driver_entry.packages,
-                    configurations: driver_entry.configurations,
-                    pre_install_script: (),
-                    post_install_script: (),
+                    configurations: driver_entry
+                        .configurations
+                        .into_iter()
+                        .map(|item| item.into())
+                        .collect(),
+                    pre_install_script: driver_entry.pre_install.map(|item| item.into()),
+                    post_install_script: driver_entry.post_install.map(|item| item.into()),
                 });
             }
         })
         .unwrap();
+    driver_database.save().unwrap();
     Ok(GenerateDatabaseActionOutput::new())
 }

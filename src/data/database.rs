@@ -1,14 +1,18 @@
-use std::{
-    collections::{BTreeSet, HashMap},
-    fmt::{Debug, Display},
-    ops::{Deref, DerefMut},
-    path::PathBuf,
-    str::FromStr, num::ParseIntError,
+use crate::{
+    data::input_file,
+    error::{DatabaseSnafu, EnumValueSnafu, Error},
 };
-use crate::{error::{DatabaseSnafu, EnumValueSnafu, Error}, data::input_file};
 use rustbreak::{deser::Ron, FileDatabase};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
+use std::{
+    collections::{BTreeSet, HashMap},
+    fmt::{Debug, Display},
+    num::ParseIntError,
+    ops::{Deref, DerefMut},
+    path::PathBuf,
+    str::FromStr,
+};
 
 #[derive(Debug)]
 pub struct DriverDatabase {
@@ -54,14 +58,14 @@ pub struct DriverRecord {
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PciId {
-    vendor_id: u16,
-    device_id: u16,
+    pub vendor_id: u16,
+    pub device_id: u16,
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct UsbId {
-    vendor_id: u16,
-    device_id: u16,
+    pub vendor_id: u16,
+    pub device_id: u16,
 }
 
 #[derive(
@@ -76,7 +80,7 @@ pub struct UsbId {
 pub struct ConfigurationRecord {
     pub format: ConfigurationFormat,
     pub path: PathBuf,
-    pub entries: HashMap<String, String>,
+    pub entry_map: HashMap<String, String>,
 }
 
 #[derive(
@@ -105,8 +109,8 @@ pub enum ConfigurationFormat {
     Deserialize,
 )]
 pub struct Script {
+    pub path: PathBuf,
     pub script_kind: ScriptKind,
-    pub path: Option<PathBuf>,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
@@ -120,14 +124,12 @@ pub enum ScriptKind {
 pub enum ParsePciIdError {
     InvalidVendorId(ParseIntError),
     InvalidDeviceId(ParseIntError),
-    MissingColon,
 }
 
 #[derive(Clone, Debug)]
 pub enum ParseUsbIdError {
     InvalidVendorId(ParseIntError),
     InvalidDeviceId(ParseIntError),
-    MissingColon,
 }
 
 impl DriverDatabase {
@@ -140,8 +142,11 @@ impl DriverDatabase {
 
     pub fn create_with_database_path(filepath: PathBuf) -> Result<Self, Error> {
         Ok(DriverDatabase {
-            inner: FileDatabase::<HardwareListing, Ron>::create_at_path(filepath, HardwareListing::default())
-                .context(DatabaseSnafu {})?,
+            inner: FileDatabase::<HardwareListing, Ron>::create_at_path(
+                filepath,
+                HardwareListing::default(),
+            )
+            .context(DatabaseSnafu {})?,
         })
     }
 }
@@ -343,11 +348,11 @@ impl Debug for PciId {
     }
 }
 
-impl TryFrom<&str> for PciId {
+impl TryFrom<(&str, &str)> for PciId {
     type Error = ParsePciIdError;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let (vendor_id, device_id) = value.split_once(':').ok_or(ParsePciIdError::MissingColon)?;
+    fn try_from(value: (&str, &str)) -> Result<Self, Self::Error> {
+        let (vendor_id, device_id) = value;
         let vendor_id = u16::from_str_radix(vendor_id, 16)
             .map_err(|parse_int_error| ParsePciIdError::InvalidVendorId(parse_int_error))?;
         let device_id = u16::from_str_radix(device_id, 16)
@@ -356,11 +361,12 @@ impl TryFrom<&str> for PciId {
     }
 }
 
-impl FromStr for PciId {
-    type Err = ParsePciIdError;
+impl TryFrom<(String, String)> for PciId {
+    type Error = ParsePciIdError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::try_from(s)
+    fn try_from(value: (String, String)) -> Result<Self, Self::Error> {
+        let (vendor_id, device_id) = value;
+        PciId::try_from((vendor_id.as_ref(), device_id.as_ref()))
     }
 }
 
@@ -372,9 +378,6 @@ impl Display for ParsePciIdError {
             }
             ParsePciIdError::InvalidDeviceId(parse_int_error) => {
                 write!(f, "Invalid Device ID. Please refer to {}", parse_int_error)
-            }
-            ParsePciIdError::MissingColon => {
-                write!(f, "Invalid PCI ID. Please ensure that the Vendor and Device IDs are separated by a colon `:`")
             }
         }
     }
@@ -412,11 +415,11 @@ impl Debug for UsbId {
     }
 }
 
-impl TryFrom<&str> for UsbId {
+impl TryFrom<(&str, &str)> for UsbId {
     type Error = ParseUsbIdError;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let (vendor_id, device_id) = value.split_once(':').ok_or(ParseUsbIdError::MissingColon)?;
+    fn try_from(value: (&str, &str)) -> Result<Self, Self::Error> {
+        let (vendor_id, device_id) = value;
         let vendor_id = u16::from_str_radix(vendor_id, 16)
             .map_err(|parse_int_error| ParseUsbIdError::InvalidVendorId(parse_int_error))?;
         let device_id = u16::from_str_radix(device_id, 16)
@@ -425,11 +428,12 @@ impl TryFrom<&str> for UsbId {
     }
 }
 
-impl FromStr for UsbId {
-    type Err = ParseUsbIdError;
+impl TryFrom<(String, String)> for UsbId {
+    type Error = ParseUsbIdError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::try_from(s)
+    fn try_from(value: (String, String)) -> Result<Self, Self::Error> {
+        let (vendor_id, device_id) = value;
+        UsbId::try_from((vendor_id.as_ref(), device_id.as_ref()))
     }
 }
 
@@ -442,9 +446,6 @@ impl Display for ParseUsbIdError {
             ParseUsbIdError::InvalidDeviceId(parse_int_error) => {
                 write!(f, "Invalid Device ID. Please refer to {}", parse_int_error)
             }
-            ParseUsbIdError::MissingColon => {
-                write!(f, "Invalid USB ID. Please ensure that the Vendor and Device IDs are separated by a colon `:`")
-            }
         }
     }
 }
@@ -452,9 +453,9 @@ impl Display for ParseUsbIdError {
 impl From<input_file::Configuration> for ConfigurationRecord {
     fn from(input_configuration: input_file::Configuration) -> Self {
         ConfigurationRecord {
-            format: input_configuration.format,
+            format: input_configuration.format.into(),
             path: input_configuration.path,
-            entries: input_configuration.entries
+            entry_map: input_configuration.entry_map,
         }
     }
 }
@@ -465,14 +466,39 @@ impl Default for ConfigurationFormat {
     }
 }
 
-impl From<input_file::Configuration> for ConfigurationFormat {
-    fn from(input_configuration: input_file::Configuration) -> Self {
-        todo!()
+impl From<input_file::ConfigurationFormat> for ConfigurationFormat {
+    fn from(input_configuration_format: input_file::ConfigurationFormat) -> Self {
+        match input_configuration_format {
+            input_file::ConfigurationFormat::Ini => ConfigurationFormat::Ini,
+            input_file::ConfigurationFormat::Json => ConfigurationFormat::Json,
+            input_file::ConfigurationFormat::Yaml => ConfigurationFormat::Yaml,
+            input_file::ConfigurationFormat::Toml => ConfigurationFormat::Toml,
+            input_file::ConfigurationFormat::Xml => ConfigurationFormat::Xml,
+        }
+    }
+}
+
+impl From<input_file::Script> for Script {
+    fn from(input_script: input_file::Script) -> Self {
+        Script {
+            path: input_script.path,
+            script_kind: input_script.language.into(),
+        }
     }
 }
 
 impl Default for ScriptKind {
     fn default() -> Self {
         return Self::Shell;
+    }
+}
+
+impl From<input_file::ScriptKind> for ScriptKind {
+    fn from(input_script_kind: input_file::ScriptKind) -> Self {
+        match input_script_kind {
+            input_file::ScriptKind::Python => ScriptKind::Python,
+            input_file::ScriptKind::JavaScript => ScriptKind::JavaScript,
+            input_file::ScriptKind::Shell => ScriptKind::Shell,
+        }
     }
 }
