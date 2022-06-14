@@ -16,26 +16,31 @@ exclude = ["scripts/*", ".gitlab-ci.yml", "ArchLinuxDriverManager.code-workspace
 
 [dependencies]
 
-# For the Commandline
+# Commandline
 clap = { version = "3.1", features = ["derive"] }
-qr_code = { version = "1.1" }
 owo-colors = { version = "3.4", features = ["supports-colors"] }
 
-# For the data model
+# Data interchange
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-serde_yaml = "0.8"
-serde-aux = "3.0"
 rustbreak = { version = "2", features = ["ron_enc"] }
-rangemap = { version = "1.0", features = ["serde1"] }
+serde_yaml = "0.8"
+serde_json = "1.0"
+
+# Data model
 ron = "0.7.0"
+iset = "0.1"
+rangemap = { version = "1.0", features = ["serde1"] }
 
 # ArchLinux package management system
 alpm = "2.2"
 alpm-utils = "2.0"
 pacmanconf = "2.0"
 
+# Hardware identification
+aparato = "6.0"
+usb_enumeration = "0.1.2"
+
 # Miscellaneous
 snafu = "0.7"
-aparato = "6.0"
+
 

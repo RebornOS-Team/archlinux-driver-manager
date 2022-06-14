@@ -1,6 +1,6 @@
 pub use commandline_interface_template::*;
 
-use crate::actions::{install, list, search};
+use crate::actions::{install, list, search, generate_database};
 use clap::Parser;
 use owo_colors::{OwoColorize, Stream::Stderr};
 use std::fmt::Display;
@@ -44,31 +44,6 @@ pub enum CommandlineOutputKind {
     Json,
     Plain,
     Debug,
-}
-
-impl CommandlineInterface {
-    pub fn new() -> Self {
-        CommandlineInterface {}
-    }
-
-    pub fn run(self) {
-        let cli = Cli::parse();
-
-        match cli.command {
-            Some(ActionCommand::List(list_action_arguments)) => {
-                list::list(list_action_arguments).print_select(cli.global_arguments);
-            }
-            Some(ActionCommand::Search(search_action_arguments)) => {
-                search::search(search_action_arguments).print_select(cli.global_arguments);
-            }
-            Some(ActionCommand::Install(install_action_arguments)) => {
-                install::install(install_action_arguments).print_select(cli.global_arguments);
-            }
-            None => {
-                list::list(cli.arguments).print_select(cli.global_arguments);
-            }
-        }
-    }
 }
 
 impl<T, E> CommandlinePrint for Result<T, E>
@@ -132,11 +107,39 @@ where
     }
 }
 
+impl CommandlineInterface {
+    pub fn new() -> Self {
+        CommandlineInterface {}
+    }
+
+    pub fn run(self) {
+        let cli = Cli::parse();
+
+        match cli.command {
+            Some(ActionCommand::List(list_action_arguments)) => {
+                list::list(list_action_arguments).print_select(cli.global_arguments);
+            }
+            Some(ActionCommand::Search(search_action_arguments)) => {
+                search::search(search_action_arguments).print_select(cli.global_arguments);
+            }
+            Some(ActionCommand::Install(install_action_arguments)) => {
+                install::install(install_action_arguments).print_select(cli.global_arguments);
+            }
+            Some(ActionCommand::GenerateDatabase(generate_database_action_arguments)) => {
+                generate_database::generate_database(generate_database_action_arguments).print_select(cli.global_arguments);
+            }
+            None => {
+                list::list(cli.arguments).print_select(cli.global_arguments);
+            }
+        }
+    }
+}
+
 pub mod commandline_interface_template {
     use clap::{Args, Parser, Subcommand};
     use std::path::PathBuf;
 
-    use crate::data::HardwareKind;
+    use crate::data::database::HardwareKind;
 
     use super::CommandlineFlags;
 
@@ -201,14 +204,17 @@ pub mod commandline_interface_template {
     #[derive(Debug, Subcommand)]
     #[clap(args_conflicts_with_subcommands = true)]
     pub enum ActionCommand {
-        #[clap(about = "List installed drivers.", display_order = 1)]
+        #[clap(name = "list", about = "List installed drivers.", display_order = 1)]
         List(ListActionArguments),
 
-        #[clap(about = "Search for available drivers.", display_order = 2)]
+        #[clap(name = "search", about = "Search for available drivers.", display_order = 2)]
         Search(SearchActionArguments),
 
-        #[clap(about = "Install Drivers.", display_order = 3)]
+        #[clap(name = "install", about = "Install Drivers.", display_order = 3)]
         Install(InstallActionArguments),
+
+        #[clap(name = "generate-database", alias = "gendb", about = "Generate database from input file.", display_order = 4)]
+        GenerateDatabase(GenerateDatabaseActionArguments),
     }
 
     #[derive(Debug, Args)]
@@ -285,6 +291,22 @@ pub mod commandline_interface_template {
             help = "Path to the `ron` database file to use for searching drivers.",
             default_value = "database.ron",
             display_order = 33
+        )]
+        pub database_file: PathBuf,
+    }
+
+    #[derive(Debug, Args)]
+    pub struct GenerateDatabaseActionArguments {
+        #[clap(
+            help = "Path to the input file (Only YAML, JSON, and RON are supported).",
+            display_order = 41
+        )]
+        pub input_file: PathBuf,
+
+        #[clap(
+            help = "Path to the `ron` database file to generate.",
+            default_value = "database.ron",
+            display_order = 42
         )]
         pub database_file: PathBuf,
     }

@@ -1,27 +1,4 @@
 {
-    Graphics: [
-        (("abc1:fab2", "afa2:aaba"), [
-            (
-                name: "Graphics Driver 1",
-                description: "Something about Graphics Driver 1",
-                tags: [],
-                packages: [
-                    "dolphin",
-                    "thunar",
-                    "nautilus",
-                ],
-                configs: [
-                    (
-                        format: Ini,
-                        path: None,
-                        entries: {},
-                    ),
-                ],
-                pre_install_script: None,
-                post_install_script: None,
-            ),
-        ]),
-    ],
     Wireless: [
         (("aaba:fab2", "abaa:1231"), [
             (
@@ -34,7 +11,7 @@
                     "code",
                     "nano",
                 ],
-                configs: [
+                configurations: [
                     (
                         format: Ini,
                         path: None,
@@ -54,7 +31,30 @@
                     "nvidia",
                     "amd",
                 ],
-                configs: [
+                configurations: [
+                    (
+                        format: Ini,
+                        path: None,
+                        entries: {},
+                    ),
+                ],
+                pre_install_script: None,
+                post_install_script: None,
+            ),
+        ]),
+    ],
+    Graphics: [
+        (("abc1:fab2", "afa2:aaba"), [
+            (
+                name: "Graphics Driver 1",
+                description: "Something about Graphics Driver 1",
+                tags: [],
+                packages: [
+                    "dolphin",
+                    "thunar",
+                    "nautilus",
+                ],
+                configurations: [
                     (
                         format: Ini,
                         path: None,

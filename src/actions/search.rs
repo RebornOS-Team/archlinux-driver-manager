@@ -1,7 +1,6 @@
-use crate::data::DriverRecord;
 use crate::{
     commandline::{CommandlinePrint, SearchActionArguments},
-    data::{DriverDatabase, HardwareKind},
+    data::database::{DriverRecord, DriverDatabase, HardwareKind},
     error::{DatabaseSnafu, Error},
 };
 use owo_colors::{OwoColorize, Stream::Stdout};
