@@ -3,119 +3,6 @@
         [
             Pci((
                 vendor_id: 4318,
-                device_id: 7682,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7684,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7687,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7728,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7740,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7810,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7815,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7817,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7824,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7856,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7857,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7888,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7938,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7943,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7944,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7952,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 7953,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 8016,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 8017,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 8066,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 8081,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 8578,
-            )),
-            Pci((
-                vendor_id: 4318,
-                device_id: 8580,
-            )),
-        ]: [
-            (
-                name: "Nvidia Open",
-                description: "Graphics driver for Nvidia GPU from the `nvidia-open` package found in the official Arch Linux `Extra` repository.",
-                tags: [
-                    "proprietary",
-                    "closed source",
-                    "open source",
-                    "free",
-                    "non free",
-                    "alpha",
-                ],
-                packages: [
-                    "nvidia-open",
-                ],
-                configurations: [],
-                pre_install_script: None,
-                post_install_script: None,
-            ),
-        ],
-        [
-            Pci((
-                vendor_id: 4318,
                 device_id: 4928,
             )),
             Pci((
@@ -464,43 +351,28 @@
             )),
         ]: [
             (
-                name: "Nvidia DKMS",
-                description: "Graphics driver (that uses DKMS) for Nvidia GPU from the `nvidia-dkms` package found in the official Arch Linux `Extra` repository.",
+                name: "Nvidia Beta",
+                description: "Beta graphics driver for Nvidia GPU from the `nvidia-beta` package found in the Arch user repository.",
                 tags: [
-                    "proprietary",
+                    "beta",
                     "closed source",
                     "non free",
+                    "proprietary",
                 ],
                 packages: [
-                    "nvidia-dkms",
-                    "nvidia-utils",
-                    "nvidia-settings",
+                    "nvidia-beta",
                 ],
-                configurations: [
-                    (
-                        format: Ini,
-                        path: "~/temp/myconf.conf",
-                        entry_map: {
-                            "hello": "world",
-                        },
-                    ),
-                ],
-                pre_install_script: Some((
-                    path: "dummy_pre.py",
-                    script_kind: Python,
-                )),
-                post_install_script: Some((
-                    path: "dummy_post.sh",
-                    script_kind: Shell,
-                )),
+                configurations: [],
+                pre_install_script: None,
+                post_install_script: None,
             ),
             (
                 name: "Nvidia",
                 description: "Graphics driver for Nvidia GPU from the `nvidia` package found in the official Arch Linux `Extra` repository.",
                 tags: [
-                    "proprietary",
                     "closed source",
                     "non free",
+                    "proprietary",
                 ],
                 packages: [
                     "nvidia",
@@ -526,16 +398,144 @@
                 )),
             ),
             (
-                name: "Nvidia Beta",
-                description: "Beta graphics driver for Nvidia GPU from the `nvidia-beta` package found in the Arch user repository.",
+                name: "Nvidia DKMS",
+                description: "Graphics driver (that uses DKMS) for Nvidia GPU from the `nvidia-dkms` package found in the official Arch Linux `Extra` repository.",
                 tags: [
-                    "proprietary",
                     "closed source",
                     "non free",
-                    "beta",
+                    "proprietary",
                 ],
                 packages: [
-                    "nvidia-beta",
+                    "nvidia-dkms",
+                    "nvidia-utils",
+                    "nvidia-settings",
+                ],
+                configurations: [
+                    (
+                        format: Ini,
+                        path: "~/temp/myconf.conf",
+                        entry_map: {
+                            "hello": "world",
+                        },
+                    ),
+                ],
+                pre_install_script: Some((
+                    path: "dummy_pre.py",
+                    script_kind: Python,
+                )),
+                post_install_script: Some((
+                    path: "dummy_post.sh",
+                    script_kind: Shell,
+                )),
+            ),
+        ],
+        [
+            Pci((
+                vendor_id: 4318,
+                device_id: 7682,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7684,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7687,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7728,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7740,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7810,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7815,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7817,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7824,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7856,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7857,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7888,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7938,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7943,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7944,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7952,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 7953,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8016,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8017,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8066,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8081,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8578,
+            )),
+            Pci((
+                vendor_id: 4318,
+                device_id: 8580,
+            )),
+        ]: [
+            (
+                name: "Nvidia Open",
+                description: "Graphics driver for Nvidia GPU from the `nvidia-open` package found in the official Arch Linux `Extra` repository.",
+                tags: [
+                    "alpha",
+                    "closed source",
+                    "free",
+                    "non free",
+                    "open source",
+                    "proprietary",
+                ],
+                packages: [
+                    "nvidia-open",
                 ],
                 configurations: [],
                 pre_install_script: None,

@@ -7,7 +7,7 @@ use rustbreak::{deser::Ron, FileDatabase};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
 use std::{
-    collections::{HashSet, BTreeSet, HashMap},
+    collections::{BTreeSet, HashMap, HashSet},
     fmt::{Debug, Display},
     num::ParseIntError,
     ops::{Deref, DerefMut},
@@ -53,7 +53,7 @@ pub enum HardwareId {
 pub struct DriverRecord {
     pub name: String,
     pub description: String,
-    pub tags: Vec<String>,
+    pub tags: BTreeSet<String>,
     pub packages: Vec<String>,
     pub configurations: Vec<ConfigurationRecord>,
     pub pre_install_script: Option<Script>,
@@ -72,14 +72,7 @@ pub struct UsbId {
     pub device_id: u16,
 }
 
-#[derive(
-    Default,
-    Debug,
-    Clone,
-    Serialize,
-    Deserialize,
-)]
-#[derive(Derivative)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, Derivative)]
 #[derivative(PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ConfigurationRecord {
     pub format: ConfigurationFormat,
@@ -88,7 +81,7 @@ pub struct ConfigurationRecord {
         PartialEq = "ignore",
         PartialOrd = "ignore",
         Ord = "ignore",
-        Hash = "ignore",
+        Hash = "ignore"
     )]
     pub entry_map: HashMap<String, String>,
 }
@@ -96,10 +89,10 @@ pub struct ConfigurationRecord {
 #[derive(
     Debug,
     PartialEq, // Required to implement Eq
-    Eq,        
+    Eq,
     PartialOrd,
     Ord,
-    Clone,    
+    Clone,
     Hash,
     Serialize,
     Deserialize,
@@ -116,10 +109,10 @@ pub enum ConfigurationFormat {
     Default,
     Debug,
     PartialEq, // Required to implement Eq
-    Eq, 
+    Eq,
     PartialOrd,
-    Ord,       
-    Clone,   
+    Ord,
+    Clone,
     Hash,
     Serialize,
     Deserialize,
@@ -188,9 +181,17 @@ impl HardwareListing {
         }
     }
 
-    pub fn all_packages(&self) -> HashMap<HardwareKind, HashSet<String>> {
+    pub fn all_packages(
+        &self,
+        filter_tags: &BTreeSet<String>,
+    ) -> HashMap<HardwareKind, HashSet<String>> {
         self.iter()
-            .map(|hardware_entry| (hardware_entry.0.to_owned(), hardware_entry.1.all_packages()))
+            .map(|(hardware_kind, driver_listing)| {
+                (
+                    hardware_kind.to_owned(),
+                    driver_listing.all_package_names(filter_tags),
+                )
+            })
             .collect()
     }
 }
@@ -299,11 +300,14 @@ impl DriverListing {
         }
     }
 
-    pub fn all_packages(&self) -> HashSet<String> {
+    pub fn all_package_names(&self, filter_tags: &BTreeSet<String>) -> HashSet<String> {
         let mut packages = HashSet::<String>::new();
-        for hardware_id_entry in self.iter() {
-            for driver_record in hardware_id_entry.1 {
-                packages.extend(driver_record.packages.to_owned().into_iter());
+        for (_hardware_ids, driver_records) in self.iter() {
+            for driver_record in driver_records {
+                if !driver_record.tags.is_disjoint(filter_tags) {
+                    // println!("filter_tags: {:?}, tags: {:?}, driver_name: {}", filter_tags, driver_record.tags, driver_record.name);
+                    packages.extend(driver_record.packages.to_owned().into_iter());
+                }
             }
         }
         packages
@@ -517,4 +521,8 @@ impl From<input_file::ScriptKind> for ScriptKind {
             input_file::ScriptKind::Shell => ScriptKind::Shell,
         }
     }
+}
+
+pub fn convert_tag<S: AsRef<str>>(tag: S) -> String{
+    tag.as_ref().trim().replace("-", " ").replace("_", " ")
 }

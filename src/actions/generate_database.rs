@@ -54,37 +54,47 @@ fn convert_hardware_ids(
             input_file::HardwareIdEntry::Pci(pci_id_list) => {
                 let vendor = pci_id_list.vendor;
                 for device in pci_id_list.devices {
-                    btree_set.insert(database::HardwareId::Pci((vendor.as_ref(), device.as_ref()).try_into().unwrap_or_else(|error| {
-                        println!(
-                            "{}({}:{})...{}",
-                            "Error: Invalid PCI ID ".if_supports_color(Stdout, |text| text.red()),
-                            vendor.if_supports_color(Stdout, |text| text.bold()),
-                            device.if_supports_color(Stdout, |text| text.bold()),
-                            error
-                        );
-                        database::PciId {
-                            vendor_id: 0x0000,
-                            device_id: 0x0000,
-                        }
-                    })));                    
+                    btree_set.insert(database::HardwareId::Pci(
+                        (vendor.as_ref(), device.as_ref())
+                            .try_into()
+                            .unwrap_or_else(|error| {
+                                println!(
+                                    "{}({}:{})...{}",
+                                    "Error: Invalid PCI ID "
+                                        .if_supports_color(Stdout, |text| text.red()),
+                                    vendor.if_supports_color(Stdout, |text| text.bold()),
+                                    device.if_supports_color(Stdout, |text| text.bold()),
+                                    error
+                                );
+                                database::PciId {
+                                    vendor_id: 0x0000,
+                                    device_id: 0x0000,
+                                }
+                            }),
+                    ));
                 }
             }
             input_file::HardwareIdEntry::Usb(usb_id_list) => {
                 let vendor = usb_id_list.vendor;
                 for device in usb_id_list.devices {
-                    btree_set.insert(database::HardwareId::Usb((vendor.as_ref(), device.as_ref()).try_into().unwrap_or_else(|error| {
-                        println!(
-                            "{}({}:{})...{}",
-                            "Error: Invalid USB ID ".if_supports_color(Stdout, |text| text.red()),
-                            vendor.if_supports_color(Stdout, |text| text.bold()),
-                            device.if_supports_color(Stdout, |text| text.bold()),
-                            error
-                        );
-                        database::UsbId {
-                            vendor_id: 0x0000,
-                            device_id: 0x0000,
-                        }
-                    })));                    
+                    btree_set.insert(database::HardwareId::Usb(
+                        (vendor.as_ref(), device.as_ref())
+                            .try_into()
+                            .unwrap_or_else(|error| {
+                                println!(
+                                    "{}({}:{})...{}",
+                                    "Error: Invalid USB ID "
+                                        .if_supports_color(Stdout, |text| text.red()),
+                                    vendor.if_supports_color(Stdout, |text| text.bold()),
+                                    device.if_supports_color(Stdout, |text| text.bold()),
+                                    error
+                                );
+                                database::UsbId {
+                                    vendor_id: 0x0000,
+                                    device_id: 0x0000,
+                                }
+                            }),
+                    ));
                 }
             }
         }
@@ -114,7 +124,9 @@ pub fn generate_database(
                 driver_records.insert(database::DriverRecord {
                     name: driver_entry.name,
                     description: driver_entry.description,
-                    tags: driver_entry.tags,
+                    tags: driver_entry
+                        .tags
+                        .iter().map(database::convert_tag).collect(),
                     packages: driver_entry.packages,
                     configurations: driver_entry
                         .configurations

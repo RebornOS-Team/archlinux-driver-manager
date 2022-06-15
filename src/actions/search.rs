@@ -68,20 +68,17 @@ impl CommandlinePrint for SearchActionOutput {
                 println!(
                     "\t{} {:?}",
                     "Search tags:".if_supports_color(Stdout, |text| text.green()),
-                    driver_record
-                        .tags
-                );                
+                    driver_record.tags
+                );
                 println!(
                     "\t{} {}",
                     "Description:".if_supports_color(Stdout, |text| text.green()),
-                    driver_record
-                        .description
+                    driver_record.description
                 );
                 println!(
                     "\t{} {:?}",
                     "Packages:".if_supports_color(Stdout, |text| text.green()),
-                    driver_record
-                        .packages
+                    driver_record.packages
                 );
                 println!("");
             }
@@ -102,7 +99,7 @@ impl CommandlinePrint for SearchActionOutput {
                     "{} {} {:?} {} {:?}",
                     hardware_kind.to_string().to_lowercase(),
                     driver_record.name,
-                    driver_record.tags,                    
+                    driver_record.tags,
                     driver_record.description,
                     driver_record.packages,
                 );
@@ -153,6 +150,8 @@ pub fn search(search_action_arguments: SearchActionArguments) -> Result<SearchAc
 
     let hardware_ids_present = hardware_ids_present();
 
+    let filter_tags: BTreeSet<String> = search_action_arguments.tags.into_iter().collect();
+
     let mut relevant_driver_records = HashMap::<HardwareKind, HashSet<DriverRecord>>::new();
     if let Some(hardware_kind) = search_action_arguments.hardware {
         driver_database
@@ -163,7 +162,12 @@ pub fn search(search_action_arguments: SearchActionArguments) -> Result<SearchAc
                             relevant_driver_records
                                 .entry(hardware_kind)
                                 .or_default()
-                                .extend(driver_records.clone().into_iter());
+                                .extend(driver_records.clone().into_iter().filter(
+                                    |driver_record| {
+                                        // println!("filter_tags: {:?}, tags: {:?}, driver_name: {}", filter_tags, driver_record.tags, driver_record.name);
+                                        !driver_record.tags.is_disjoint(&filter_tags)
+                                    }
+                                ));
                         }
                     }
                 }
@@ -178,7 +182,12 @@ pub fn search(search_action_arguments: SearchActionArguments) -> Result<SearchAc
                             relevant_driver_records
                                 .entry(hardware_kind.to_owned())
                                 .or_default()
-                                .extend(driver_records.clone().into_iter());
+                                .extend(driver_records.clone().into_iter().filter(
+                                    |driver_record| {
+                                        // println!("filter_tags: {:?}, tags: {:?}, driver_name: {}", filter_tags, driver_record.tags, driver_record.name);
+                                        !driver_record.tags.is_disjoint(&filter_tags)
+                                    }
+                                ));
                         }
                     }
                 }

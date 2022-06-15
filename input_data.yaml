@@ -7,8 +7,8 @@
   hardware_kind: graphics
   tags:
     - proprietary
-    - closed source
-    - non free
+    - closed_source
+    - non-free
   ids:
     - pci:
         vendor: 10de 
@@ -36,8 +36,8 @@
   hardware_kind: graphics
   tags:
     - proprietary
-    - closed source
-    - non free
+    - closed-source
+    - non_free
   ids:
     - pci:
         vendor: 10de 

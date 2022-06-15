@@ -1,4 +1,4 @@
-use std::{fs::File, path::PathBuf, collections::HashMap};
+use std::{fs::File, path::PathBuf, collections::{HashMap, BTreeSet}};
 
 use serde::{Serialize, Deserialize};
 use snafu::ResultExt;
@@ -15,7 +15,7 @@ pub struct DriverEntry {
     pub hardware_kind: HardwareKind,
 
     #[serde(default)] 
-    pub tags: Vec<String>,
+    pub tags: BTreeSet<String>,
 
     #[serde(default)] 
     pub ids: Vec<HardwareIdEntry>,
@@ -154,7 +154,7 @@ mod tests {
                 "proprietary".to_string(),
                 "closed source".to_string(),
                 "non free".to_string()
-            ],
+            ].into_iter().collect(),
             ids: vec![
                 HardwareIdEntry::Pci (
                     PciIdList {

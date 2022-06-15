@@ -1,6 +1,9 @@
 pub use commandline_interface_template::*;
 
-use crate::actions::{install, list, search, generate_database};
+use crate::{
+    actions::{generate_database, install, list, search},
+    data::database::convert_tag,
+};
 use clap::Parser;
 use owo_colors::{OwoColorize, Stream::Stderr};
 use std::fmt::Display;
@@ -113,22 +116,40 @@ impl CommandlineInterface {
     }
 
     pub fn run(self) {
-        let cli = Cli::parse();
+        let mut cli = Cli::parse();
 
         match cli.command {
-            Some(ActionCommand::List(list_action_arguments)) => {
+            Some(ActionCommand::List(mut list_action_arguments)) => {
+                list_action_arguments.tags =
+                    list_action_arguments.tags.iter().map(convert_tag).collect();
+
                 list::list(list_action_arguments).print_select(cli.global_arguments);
             }
-            Some(ActionCommand::Search(search_action_arguments)) => {
+            Some(ActionCommand::Search(mut search_action_arguments)) => {
+                search_action_arguments.tags = search_action_arguments
+                    .tags
+                    .iter()
+                    .map(convert_tag)
+                    .collect();
+
                 search::search(search_action_arguments).print_select(cli.global_arguments);
             }
-            Some(ActionCommand::Install(install_action_arguments)) => {
+            Some(ActionCommand::Install(mut install_action_arguments)) => {
+                install_action_arguments.tags = install_action_arguments
+                    .tags
+                    .iter()
+                    .map(convert_tag)
+                    .collect();
+
                 install::install(install_action_arguments).print_select(cli.global_arguments);
             }
             Some(ActionCommand::GenerateDatabase(generate_database_action_arguments)) => {
-                generate_database::generate_database(generate_database_action_arguments).print_select(cli.global_arguments);
+                generate_database::generate_database(generate_database_action_arguments)
+                    .print_select(cli.global_arguments);
             }
             None => {
+                cli.arguments.tags = cli.arguments.tags.iter().map(convert_tag).collect();
+
                 list::list(cli.arguments).print_select(cli.global_arguments);
             }
         }
@@ -207,13 +228,22 @@ pub mod commandline_interface_template {
         #[clap(name = "list", about = "List installed drivers.", display_order = 1)]
         List(ListActionArguments),
 
-        #[clap(name = "search", about = "Search for available drivers.", display_order = 2)]
+        #[clap(
+            name = "search",
+            about = "Search for available drivers.",
+            display_order = 2
+        )]
         Search(SearchActionArguments),
 
         #[clap(name = "install", about = "Install Drivers.", display_order = 3)]
         Install(InstallActionArguments),
 
-        #[clap(name = "generate-database", alias = "gendb", about = "Generate database from input file.", display_order = 4)]
+        #[clap(
+            name = "generate-database",
+            alias = "gendb",
+            about = "Generate database from input file.",
+            display_order = 4
+        )]
         GenerateDatabase(GenerateDatabaseActionArguments),
     }
 
@@ -227,7 +257,7 @@ pub mod commandline_interface_template {
         pub hardware: Option<HardwareKind>,
 
         #[clap(
-            long = "tags",
+            long = "tag",
             short = 't',
             help = "Tags to filter drivers.",
             display_order = 12
@@ -253,7 +283,7 @@ pub mod commandline_interface_template {
         pub hardware: Option<HardwareKind>,
 
         #[clap(
-            long = "tags",
+            long = "tag",
             short = 't',
             help = "Tags to filter drivers.",
             display_order = 22
@@ -279,7 +309,7 @@ pub mod commandline_interface_template {
         pub hardware: HardwareKind,
 
         #[clap(
-            long = "tags",
+            long = "tag",
             short = 't',
             help = "Tags to filter drivers.",
             display_order = 32

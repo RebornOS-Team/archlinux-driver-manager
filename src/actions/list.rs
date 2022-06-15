@@ -7,7 +7,7 @@ use crate::{
 use owo_colors::{OwoColorize, Stream::Stdout};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 use std::fmt::Display;
 use std::{
     collections::HashMap,
@@ -56,12 +56,12 @@ impl Display for ListActionOutput {
 
 impl CommandlinePrint for ListActionOutput {
     fn print(&self) {
-        for hardware in self.inner.iter() {
+        for (hardware_kind, installed_packages) in self.inner.iter() {
             println!(
                 "{}",
-                hardware.0.if_supports_color(Stdout, |text| text.bold())
+                hardware_kind.if_supports_color(Stdout, |text| text.bold())
             );
-            for package in hardware.1.iter() {
+            for package in installed_packages.iter() {
                 println!(
                     "\t{} {}",
                     package.name.if_supports_color(Stdout, |text| text.yellow()),
@@ -81,11 +81,11 @@ impl CommandlinePrint for ListActionOutput {
     }
 
     fn print_plain(&self) {
-        for hardware in self.inner.iter() {
-            for package in hardware.1.iter() {
+        for (hardware_kind, installed_packages) in self.inner.iter() {
+            for package in installed_packages.iter() {
                 println!(
                     "{} {} {}",
-                    hardware.0.to_string().to_lowercase(),
+                    hardware_kind.to_string().to_lowercase(),
                     package.name,
                     package.version
                 );
@@ -99,13 +99,15 @@ impl CommandlinePrint for ListActionOutput {
 }
 
 pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutput, Error> {
-    let driver_database =
-        DriverDatabase::with_database_path(list_action_arguments.database_file)?;
+    let driver_database = DriverDatabase::with_database_path(list_action_arguments.database_file)?;
     let package_manager = PackageManager::new();
 
     driver_database.load().context(DatabaseSnafu {})?;
-    let all_driver_packages =
-        all_driver_packages(list_action_arguments.hardware, &driver_database)?;
+    let all_driver_packages = all_driver_packages(
+        list_action_arguments.hardware,
+        &list_action_arguments.tags.into_iter().collect(),
+        &driver_database,
+    )?;
 
     Ok(ListActionOutput {
         inner: installed_drivers(all_driver_packages, &package_manager),
@@ -114,6 +116,7 @@ pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutp
 
 fn all_driver_packages(
     optional_hardware: Option<HardwareKind>,
+    filter_tags: &BTreeSet<String>,
     driver_database: &DriverDatabase,
 ) -> Result<HashMap<HardwareKind, HashSet<String>>, Error> {
     let mut all_driver_packages = HashMap::<HardwareKind, HashSet<String>>::new();
@@ -121,13 +124,16 @@ fn all_driver_packages(
         Some(hardware) => driver_database
             .read(|hardware_listing| {
                 if let Some(driver_listing) = hardware_listing.get(&hardware) {
-                    all_driver_packages.insert(hardware.to_owned(), driver_listing.all_packages());
+                    all_driver_packages
+                        .entry(hardware.to_owned())
+                        .or_default()
+                        .extend(driver_listing.all_package_names(filter_tags));
                 }
             })
             .context(DatabaseSnafu {})?,
         None => driver_database
             .read(|hardware_listing| {
-                all_driver_packages.extend(hardware_listing.all_packages().into_iter());
+                all_driver_packages.extend(hardware_listing.all_packages(filter_tags));
             })
             .context(DatabaseSnafu {})?,
     }
@@ -139,26 +145,18 @@ fn installed_drivers(
     all_driver_packages: HashMap<HardwareKind, HashSet<String>>,
     package_manager: &PackageManager,
 ) -> HashMap<HardwareKind, HashSet<InstalledPackage>> {
-    all_driver_packages
-        .iter()
-        .filter_map(|hardware_entry| {
-            let installed_package_list: HashSet<InstalledPackage> = hardware_entry
-                .1
-                .iter()
-                .filter_map(|package_name| {
-                    package_manager
-                        .get(package_name)
-                        .map(|package| InstalledPackage {
-                            name: package.name().to_owned(),
-                            version: package.version().to_string(),
-                        })
-                })
-                .collect();
-            if installed_package_list.len() > 0 {
-                Some((hardware_entry.0.to_owned(), installed_package_list))
-            } else {
-                None
-            }
-        })
-        .collect()
+    let mut installed_drivers = HashMap::<HardwareKind, HashSet<InstalledPackage>>::new();
+    for (hardware_kind, package_names) in all_driver_packages {
+        installed_drivers.entry(hardware_kind).or_default().extend(
+            package_names.iter().filter_map(|package_name| {
+                package_manager
+                    .get(package_name)
+                    .map(|package| InstalledPackage {
+                        name: package.name().to_owned(),
+                        version: package.version().to_string(),
+                    })
+            }),
+        );
+    }
+    installed_drivers
 }
