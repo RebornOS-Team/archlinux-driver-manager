@@ -304,7 +304,7 @@ impl DriverListing {
         let mut packages = HashSet::<String>::new();
         for (_hardware_ids, driver_records) in self.iter() {
             for driver_record in driver_records {
-                if !driver_record.tags.is_disjoint(filter_tags) {
+                if filter_tags.is_empty() || !driver_record.tags.is_disjoint(filter_tags) {
                     // println!("filter_tags: {:?}, tags: {:?}, driver_name: {}", filter_tags, driver_record.tags, driver_record.name);
                     packages.extend(driver_record.packages.to_owned().into_iter());
                 }
