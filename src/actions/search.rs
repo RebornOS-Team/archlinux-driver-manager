@@ -1,6 +1,6 @@
 use crate::{
     commandline::{CommandlinePrint, SearchActionArguments},
-    data::database::{DriverDatabase, DriverRecord, HardwareId, HardwareKind, PciId, UsbId},
+    data::database::{DriverDatabase, DriverRecord, HardwareId, HardwareKind, PciId, UsbId, DriverListing},
     error::{DatabaseSnafu, Error},
 };
 use aparato::{Device, Fetch, PCIDevice};
@@ -157,23 +157,28 @@ pub fn relevant_drivers<T: IntoIterator<Item = String>>(
     let filter_tags: BTreeSet<String> = tags.into_iter().collect();
 
     let mut relevant_driver_records = HashMap::<HardwareKind, HashSet<DriverRecord>>::new();
+
+    let mut process_hardware_listing_entry = |hardware_kind: &HardwareKind, driver_listing: &DriverListing| {
+        for (hardware_ids, driver_records) in driver_listing.iter() {
+            if !hardware_ids.is_disjoint(&hardware_ids_present) {
+                relevant_driver_records
+                    .entry(hardware_kind.to_owned())
+                    .or_default()
+                    .extend(driver_records.clone().into_iter().filter(
+                        |driver_record| {
+                            // println!("filter_tags: {:?}, tags: {:?}, driver_name: {}", filter_tags, driver_record.tags, driver_record.name);
+                            filter_tags.is_empty() || !driver_record.tags.is_disjoint(&filter_tags)
+                        },
+                    ));
+            }
+        }
+    };
+
     if let Some(hardware_kind) = optional_hardware {
         driver_database
             .read(|hardware_listing| {
                 if let Some(driver_listing) = hardware_listing.get(&hardware_kind) {
-                    for (hardware_ids, driver_records) in driver_listing.iter() {
-                        if !hardware_ids.is_disjoint(&hardware_ids_present) {
-                            relevant_driver_records
-                                .entry(hardware_kind)
-                                .or_default()
-                                .extend(driver_records.clone().into_iter().filter(
-                                    |driver_record| {
-                                        // println!("filter_tags: {:?}, tags: {:?}, driver_name: {}", filter_tags, driver_record.tags, driver_record.name);
-                                        filter_tags.is_empty() || !driver_record.tags.is_disjoint(&filter_tags)
-                                    },
-                                ));
-                        }
-                    }
+                    process_hardware_listing_entry(&hardware_kind, driver_listing);
                 }
             })
             .unwrap();
@@ -181,19 +186,7 @@ pub fn relevant_drivers<T: IntoIterator<Item = String>>(
         driver_database
             .read(|hardware_listing| {
                 for (hardware_kind, driver_listing) in hardware_listing.iter() {
-                    for (hardware_ids, driver_records) in driver_listing.iter() {
-                        if !hardware_ids.is_disjoint(&hardware_ids_present) {
-                            relevant_driver_records
-                                .entry(hardware_kind.to_owned())
-                                .or_default()
-                                .extend(driver_records.clone().into_iter().filter(
-                                    |driver_record| {
-                                        // println!("filter_tags: {:?}, tags: {:?}, driver_name: {}", filter_tags, driver_record.tags, driver_record.name);
-                                        filter_tags.is_empty() || !driver_record.tags.is_disjoint(&filter_tags)
-                                    },
-                                ));
-                        }
-                    }
+                    process_hardware_listing_entry(&hardware_kind, driver_listing);
                 }
             })
             .unwrap();
@@ -212,59 +205,4 @@ pub fn search(search_action_arguments: SearchActionArguments) -> Result<SearchAc
             )?,
         }    
     )
-
-    // let driver_database =
-    //     DriverDatabase::with_database_path(search_action_arguments.database_file)?;
-    // driver_database.load().context(DatabaseSnafu {})?;
-
-    // let hardware_ids_present = hardware_ids_present();
-
-    // let filter_tags: BTreeSet<String> = search_action_arguments.tags.into_iter().collect();
-
-    // let mut relevant_driver_records = HashMap::<HardwareKind, HashSet<DriverRecord>>::new();
-    // if let Some(hardware_kind) = search_action_arguments.hardware {
-    //     driver_database
-    //         .read(|hardware_listing| {
-    //             if let Some(driver_listing) = hardware_listing.get(&hardware_kind) {
-    //                 for (hardware_ids, driver_records) in driver_listing.iter() {
-    //                     if !hardware_ids.is_disjoint(&hardware_ids_present) {
-    //                         relevant_driver_records
-    //                             .entry(hardware_kind)
-    //                             .or_default()
-    //                             .extend(driver_records.clone().into_iter().filter(
-    //                                 |driver_record| {
-    //                                     // println!("filter_tags: {:?}, tags: {:?}, driver_name: {}", filter_tags, driver_record.tags, driver_record.name);
-    //                                     !driver_record.tags.is_disjoint(&filter_tags)
-    //                                 },
-    //                             ));
-    //                     }
-    //                 }
-    //             }
-    //         })
-    //         .unwrap();
-    // } else {
-    //     driver_database
-    //         .read(|hardware_listing| {
-    //             for (hardware_kind, driver_listing) in hardware_listing.iter() {
-    //                 for (hardware_ids, driver_records) in driver_listing.iter() {
-    //                     if !hardware_ids.is_disjoint(&hardware_ids_present) {
-    //                         relevant_driver_records
-    //                             .entry(hardware_kind.to_owned())
-    //                             .or_default()
-    //                             .extend(driver_records.clone().into_iter().filter(
-    //                                 |driver_record| {
-    //                                     // println!("filter_tags: {:?}, tags: {:?}, driver_name: {}", filter_tags, driver_record.tags, driver_record.name);
-    //                                     !driver_record.tags.is_disjoint(&filter_tags)
-    //                                 },
-    //                             ));
-    //                     }
-    //                 }
-    //             }
-    //         })
-    //         .unwrap();
-    // }
-
-    // Ok(SearchActionOutput {
-    //     inner: relevant_driver_records,
-    // })
 }
