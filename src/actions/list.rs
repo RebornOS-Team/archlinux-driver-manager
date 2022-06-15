@@ -7,6 +7,7 @@ use crate::{
 use owo_colors::{OwoColorize, Stream::Stdout};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
+use std::collections::HashSet;
 use std::fmt::Display;
 use std::{
     collections::HashMap,
@@ -16,10 +17,10 @@ use std::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct ListActionOutput {
-    inner: HashMap<HardwareKind, Vec<InstalledPackage>>,
+    inner: HashMap<HardwareKind, HashSet<InstalledPackage>>,
 }
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct InstalledPackage {
     name: String,
     version: String,
@@ -28,13 +29,13 @@ pub struct InstalledPackage {
 impl ListActionOutput {
     pub fn new() -> Self {
         ListActionOutput {
-            inner: HashMap::<HardwareKind, Vec<InstalledPackage>>::new(),
+            inner: HashMap::<HardwareKind, HashSet<InstalledPackage>>::new(),
         }
     }
 }
 
 impl Deref for ListActionOutput {
-    type Target = HashMap<HardwareKind, Vec<InstalledPackage>>;
+    type Target = HashMap<HardwareKind, HashSet<InstalledPackage>>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -99,7 +100,7 @@ impl CommandlinePrint for ListActionOutput {
 
 pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutput, Error> {
     let driver_database =
-        DriverDatabase::load_with_database_path(list_action_arguments.database_file)?;
+        DriverDatabase::with_database_path(list_action_arguments.database_file)?;
     let package_manager = PackageManager::new();
 
     driver_database.load().context(DatabaseSnafu {})?;
@@ -114,8 +115,8 @@ pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutp
 fn all_driver_packages(
     optional_hardware: Option<HardwareKind>,
     driver_database: &DriverDatabase,
-) -> Result<HashMap<HardwareKind, Vec<String>>, Error> {
-    let mut all_driver_packages = HashMap::<HardwareKind, Vec<String>>::new();
+) -> Result<HashMap<HardwareKind, HashSet<String>>, Error> {
+    let mut all_driver_packages = HashMap::<HardwareKind, HashSet<String>>::new();
     match optional_hardware {
         Some(hardware) => driver_database
             .read(|hardware_listing| {
@@ -135,13 +136,13 @@ fn all_driver_packages(
 }
 
 fn installed_drivers(
-    all_driver_packages: HashMap<HardwareKind, Vec<String>>,
+    all_driver_packages: HashMap<HardwareKind, HashSet<String>>,
     package_manager: &PackageManager,
-) -> HashMap<HardwareKind, Vec<InstalledPackage>> {
+) -> HashMap<HardwareKind, HashSet<InstalledPackage>> {
     all_driver_packages
         .iter()
         .filter_map(|hardware_entry| {
-            let installed_package_list: Vec<InstalledPackage> = hardware_entry
+            let installed_package_list: HashSet<InstalledPackage> = hardware_entry
                 .1
                 .iter()
                 .filter_map(|package_name| {

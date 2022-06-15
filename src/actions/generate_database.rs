@@ -111,7 +111,7 @@ pub fn generate_database(
 
                 let driver_records = driver_listing.entry(hardware_id_set).or_default();
 
-                driver_records.push(database::DriverRecord {
+                driver_records.insert(database::DriverRecord {
                     name: driver_entry.name,
                     description: driver_entry.description,
                     tags: driver_entry.tags,

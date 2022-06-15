@@ -464,6 +464,37 @@
             )),
         ]: [
             (
+                name: "Nvidia DKMS",
+                description: "Graphics driver (that uses DKMS) for Nvidia GPU from the `nvidia-dkms` package found in the official Arch Linux `Extra` repository.",
+                tags: [
+                    "proprietary",
+                    "closed source",
+                    "non free",
+                ],
+                packages: [
+                    "nvidia-dkms",
+                    "nvidia-utils",
+                    "nvidia-settings",
+                ],
+                configurations: [
+                    (
+                        format: Ini,
+                        path: "~/temp/myconf.conf",
+                        entry_map: {
+                            "hello": "world",
+                        },
+                    ),
+                ],
+                pre_install_script: Some((
+                    path: "dummy_pre.py",
+                    script_kind: Python,
+                )),
+                post_install_script: Some((
+                    path: "dummy_post.sh",
+                    script_kind: Shell,
+                )),
+            ),
+            (
                 name: "Nvidia",
                 description: "Graphics driver for Nvidia GPU from the `nvidia` package found in the official Arch Linux `Extra` repository.",
                 tags: [
@@ -473,6 +504,8 @@
                 ],
                 packages: [
                     "nvidia",
+                    "nvidia-utils",
+                    "nvidia-settings",
                 ],
                 configurations: [
                     (
@@ -501,7 +534,9 @@
                     "non free",
                     "beta",
                 ],
-                packages: [],
+                packages: [
+                    "nvidia-beta",
+                ],
                 configurations: [],
                 pre_install_script: None,
                 post_install_script: None,

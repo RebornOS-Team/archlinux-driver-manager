@@ -2,11 +2,12 @@ use crate::{
     data::input_file,
     error::{DatabaseSnafu, EnumValueSnafu, Error},
 };
+use derivative::Derivative;
 use rustbreak::{deser::Ron, FileDatabase};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
 use std::{
-    collections::{BTreeSet, HashMap},
+    collections::{HashSet, BTreeSet, HashMap},
     fmt::{Debug, Display},
     num::ParseIntError,
     ops::{Deref, DerefMut},
@@ -36,7 +37,10 @@ pub enum HardwareKind {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct DriverListing {
-    inner: HashMap<BTreeSet<HardwareId>, Vec<DriverRecord>>,
+    // The entire BtreeSet<HardwareId> will be used as a key.
+    // A HashSet<HardwareId> will not be a key because the set as a whole is not `Eq` (due to internal ordering changes)
+    // However, we can use HashSet<DriverRecord> because the set as a whole is not used as a key. We merely want it to be internally unique.
+    inner: HashMap<BTreeSet<HardwareId>, HashSet<DriverRecord>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -45,7 +49,7 @@ pub enum HardwareId {
     Usb(UsbId),
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct DriverRecord {
     pub name: String,
     pub description: String,
@@ -71,23 +75,32 @@ pub struct UsbId {
 #[derive(
     Default,
     Debug,
-    PartialEq, // Required to implement Eq
-    Eq,        // Required by RangeInclusiveMap to implement Serialize and Deserialize
     Clone,
     Serialize,
     Deserialize,
 )]
+#[derive(Derivative)]
+#[derivative(PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ConfigurationRecord {
     pub format: ConfigurationFormat,
     pub path: PathBuf,
+    #[derivative(
+        PartialEq = "ignore",
+        PartialOrd = "ignore",
+        Ord = "ignore",
+        Hash = "ignore",
+    )]
     pub entry_map: HashMap<String, String>,
 }
 
 #[derive(
     Debug,
     PartialEq, // Required to implement Eq
-    Eq,        // Required by RangeInclusiveMap to implement Serialize and Deserialize
-    Clone,     // Required by RangeInclusiveMap to implement Serialize and Deserialize
+    Eq,        
+    PartialOrd,
+    Ord,
+    Clone,    
+    Hash,
     Serialize,
     Deserialize,
 )]
@@ -103,8 +116,11 @@ pub enum ConfigurationFormat {
     Default,
     Debug,
     PartialEq, // Required to implement Eq
-    Eq,        // Required by RangeInclusiveMap to implement Serialize and Deserialize
-    Clone,     // Required by RangeInclusiveMap to implement Serialize and Deserialize
+    Eq, 
+    PartialOrd,
+    Ord,       
+    Clone,   
+    Hash,
     Serialize,
     Deserialize,
 )]
@@ -113,7 +129,7 @@ pub struct Script {
     pub script_kind: ScriptKind,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum ScriptKind {
     Python,
     JavaScript,
@@ -133,7 +149,7 @@ pub enum ParseUsbIdError {
 }
 
 impl DriverDatabase {
-    pub fn load_with_database_path(filepath: PathBuf) -> Result<Self, Error> {
+    pub fn with_database_path(filepath: PathBuf) -> Result<Self, Error> {
         Ok(DriverDatabase {
             inner: FileDatabase::<HardwareListing, Ron>::load_from_path_or_default(filepath)
                 .context(DatabaseSnafu {})?,
@@ -172,7 +188,7 @@ impl HardwareListing {
         }
     }
 
-    pub fn all_packages(&self) -> HashMap<HardwareKind, Vec<String>> {
+    pub fn all_packages(&self) -> HashMap<HardwareKind, HashSet<String>> {
         self.iter()
             .map(|hardware_entry| (hardware_entry.0.to_owned(), hardware_entry.1.all_packages()))
             .collect()
@@ -279,12 +295,12 @@ impl From<input_file::HardwareKind> for HardwareKind {
 impl DriverListing {
     pub fn new() -> Self {
         Self {
-            inner: HashMap::<BTreeSet<HardwareId>, Vec<DriverRecord>>::new(),
+            inner: HashMap::<BTreeSet<HardwareId>, HashSet<DriverRecord>>::new(),
         }
     }
 
-    pub fn all_packages(&self) -> Vec<String> {
-        let mut packages = Vec::<String>::new();
+    pub fn all_packages(&self) -> HashSet<String> {
+        let mut packages = HashSet::<String>::new();
         for hardware_id_entry in self.iter() {
             for driver_record in hardware_id_entry.1 {
                 packages.extend(driver_record.packages.to_owned().into_iter());
@@ -295,7 +311,7 @@ impl DriverListing {
 }
 
 impl Deref for DriverListing {
-    type Target = HashMap<BTreeSet<HardwareId>, Vec<DriverRecord>>;
+    type Target = HashMap<BTreeSet<HardwareId>, HashSet<DriverRecord>>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
