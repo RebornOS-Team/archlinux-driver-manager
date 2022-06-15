@@ -352,15 +352,15 @@
         ]: [
             (
                 order_of_priority: 0,
-                name: "Nvidia",
-                description: "Graphics driver for Nvidia GPU from the `nvidia` package found in the official Arch Linux `Extra` repository.",
+                name: "Nvidia DKMS",
+                description: "Graphics driver (that uses DKMS) for Nvidia GPU from the `nvidia-dkms` package found in the official Arch Linux `Extra` repository.",
                 tags: [
                     "closed source",
                     "non free",
                     "proprietary",
                 ],
                 packages: [
-                    "nvidia",
+                    "nvidia-dkms",
                     "nvidia-utils",
                     "nvidia-settings",
                 ],
@@ -400,16 +400,16 @@
                 post_install_script: None,
             ),
             (
-                order_of_priority: 2,
-                name: "Nvidia DKMS",
-                description: "Graphics driver (that uses DKMS) for Nvidia GPU from the `nvidia-dkms` package found in the official Arch Linux `Extra` repository.",
+                order_of_priority: 25,
+                name: "Nvidia",
+                description: "Graphics driver for Nvidia GPU from the `nvidia` package found in the official Arch Linux `Extra` repository.",
                 tags: [
                     "closed source",
                     "non free",
                     "proprietary",
                 ],
                 packages: [
-                    "nvidia-dkms",
+                    "nvidia",
                     "nvidia-utils",
                     "nvidia-settings",
                 ],

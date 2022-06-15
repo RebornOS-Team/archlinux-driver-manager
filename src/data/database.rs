@@ -1,6 +1,6 @@
 use crate::{
     data::input_file,
-    error::{DatabaseSnafu, EnumValueSnafu, Error},
+    error::{DatabaseSnafu, InvalidEnumValueSnafu, Error},
 };
 use derivative::Derivative;
 use rustbreak::{deser::Ron, FileDatabase};
@@ -256,7 +256,7 @@ impl TryFrom<&str> for HardwareKind {
             "ethernet" => HardwareKind::Ethernet,
             "wireless" => HardwareKind::Wireless,
             "sound" => HardwareKind::Sound,
-            _ => EnumValueSnafu {
+            _ => InvalidEnumValueSnafu {
                 value: value.to_string(),
                 enum_name: "HardwareKind".to_string(),
                 allowed_values: Self::all_to_strings(),

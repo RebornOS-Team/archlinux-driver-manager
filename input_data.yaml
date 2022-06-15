@@ -3,6 +3,7 @@
 #=============
 - name: Nvidia
 #=============
+  order: 25
   description: "Graphics driver for Nvidia GPU from the `nvidia` package found in the official Arch Linux `Extra` repository."
   hardware_kind: graphics
   tags:
@@ -32,7 +33,7 @@
 #==================
 - name: Nvidia DKMS
 #==================
-  order: 2
+  order: 0
   description: "Graphics driver (that uses DKMS) for Nvidia GPU from the `nvidia-dkms` package found in the official Arch Linux `Extra` repository."
   hardware_kind: graphics
   tags:

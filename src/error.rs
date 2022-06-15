@@ -21,9 +21,16 @@ pub enum Error {
     #[snafu(
         display("The value {value} could not be converted to the enumeration {enum_name}. The allowed values are {allowed_values:?}")
     )]
-    EnumValue {
+    InvalidEnumValue {
         value: String,
         enum_name: String,
         allowed_values: Vec<String>,
+    },
+
+    #[snafu(
+        display("Package {name} was not found...")
+    )]
+    PackageNotFound {
+        name: String,
     },
 }

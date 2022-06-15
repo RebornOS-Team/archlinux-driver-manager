@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
 use std::collections::{BTreeSet, HashSet};
 use std::fmt::Display;
+use std::path::PathBuf;
 use std::{
     collections::HashMap,
     ops::{Deref, DerefMut},
@@ -98,22 +99,6 @@ impl CommandlinePrint for ListActionOutput {
     }
 }
 
-pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutput, Error> {
-    let driver_database = DriverDatabase::with_database_path(list_action_arguments.database_file)?;
-    let package_manager = PackageManager::new();
-
-    driver_database.load().context(DatabaseSnafu {})?;
-    let all_driver_packages = all_driver_packages(
-        list_action_arguments.hardware,
-        &list_action_arguments.tags.into_iter().collect(),
-        &driver_database,
-    )?;
-
-    Ok(ListActionOutput {
-        inner: installed_drivers(all_driver_packages, &package_manager),
-    })
-}
-
 fn all_driver_packages(
     optional_hardware: Option<HardwareKind>,
     filter_tags: &BTreeSet<String>,
@@ -159,4 +144,32 @@ fn installed_drivers(
         );
     }
     installed_drivers
+}
+
+pub fn list_inner<T: IntoIterator<Item = String>>(
+    database_filepath: PathBuf,
+    optional_hardware: Option<HardwareKind>,
+    tags: T,
+) -> Result<HashMap<HardwareKind, HashSet<InstalledPackage>>, Error> {
+    let driver_database = DriverDatabase::with_database_path(database_filepath)?;
+    let package_manager = PackageManager::new();
+
+    driver_database.load().context(DatabaseSnafu {})?;
+    let all_driver_packages = all_driver_packages(
+        optional_hardware,
+        &tags.into_iter().collect(),
+        &driver_database,
+    )?;
+
+    Ok(installed_drivers(all_driver_packages, &package_manager))
+}
+
+pub fn list(list_action_arguments: ListActionArguments) -> Result<ListActionOutput, Error> {
+    Ok(ListActionOutput {
+        inner: list_inner(
+            list_action_arguments.database_file,
+            list_action_arguments.hardware,
+            list_action_arguments.tags,
+        )?,
+    })
 }

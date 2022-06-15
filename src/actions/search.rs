@@ -15,7 +15,7 @@ use std::{
     path::PathBuf,
 };
 use std::{
-    collections::{BTreeSet, HashSet},
+    collections::BTreeSet,
     fmt::Display,
 };
 
@@ -146,7 +146,7 @@ fn hardware_ids_present() -> BTreeSet<HardwareId> {
     hardware_ids_present
 }
 
-pub fn relevant_drivers<T: IntoIterator<Item = String>>(
+pub fn search_inner<T: IntoIterator<Item = String>>(
     database_filepath: PathBuf,
     optional_hardware: Option<HardwareKind>,
     tags: T,
@@ -198,7 +198,7 @@ pub fn relevant_drivers<T: IntoIterator<Item = String>>(
 
 pub fn search(search_action_arguments: SearchActionArguments) -> Result<SearchActionOutput, Error> {
     Ok(SearchActionOutput {
-        inner: relevant_drivers(
+        inner: search_inner(
             search_action_arguments.database_file,
             search_action_arguments.hardware,
             search_action_arguments.tags,
