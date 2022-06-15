@@ -32,6 +32,7 @@
 #==================
 - name: Nvidia DKMS
 #==================
+  order: 2
   description: "Graphics driver (that uses DKMS) for Nvidia GPU from the `nvidia-dkms` package found in the official Arch Linux `Extra` repository."
   hardware_kind: graphics
   tags:
@@ -61,6 +62,7 @@
 #==================
 - name: Nvidia Beta
 #==================
+  order: 1
   description: "Beta graphics driver for Nvidia GPU from the `nvidia-beta` package found in the Arch user repository."
   hardware_kind: graphics
   tags:
@@ -78,6 +80,7 @@
 #==================
 - name: Nvidia Open
 #==================
+  order: 1
   description: "Graphics driver for Nvidia GPU from the `nvidia-open` package found in the official Arch Linux `Extra` repository."
   hardware_kind: graphics
   tags:

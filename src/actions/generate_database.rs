@@ -122,11 +122,14 @@ pub fn generate_database(
                 let driver_records = driver_listing.entry(hardware_id_set).or_default();
 
                 driver_records.insert(database::DriverRecord {
+                    order_of_priority: driver_entry.order_of_priority,
                     name: driver_entry.name,
                     description: driver_entry.description,
                     tags: driver_entry
                         .tags
-                        .iter().map(database::convert_tag).collect(),
+                        .iter()
+                        .map(database::convert_tag)
+                        .collect(),
                     packages: driver_entry.packages,
                     configurations: driver_entry
                         .configurations

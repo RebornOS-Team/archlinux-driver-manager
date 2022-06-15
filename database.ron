@@ -351,22 +351,7 @@
             )),
         ]: [
             (
-                name: "Nvidia Beta",
-                description: "Beta graphics driver for Nvidia GPU from the `nvidia-beta` package found in the Arch user repository.",
-                tags: [
-                    "beta",
-                    "closed source",
-                    "non free",
-                    "proprietary",
-                ],
-                packages: [
-                    "nvidia-beta",
-                ],
-                configurations: [],
-                pre_install_script: None,
-                post_install_script: None,
-            ),
-            (
+                order_of_priority: 0,
                 name: "Nvidia",
                 description: "Graphics driver for Nvidia GPU from the `nvidia` package found in the official Arch Linux `Extra` repository.",
                 tags: [
@@ -398,6 +383,24 @@
                 )),
             ),
             (
+                order_of_priority: 1,
+                name: "Nvidia Beta",
+                description: "Beta graphics driver for Nvidia GPU from the `nvidia-beta` package found in the Arch user repository.",
+                tags: [
+                    "beta",
+                    "closed source",
+                    "non free",
+                    "proprietary",
+                ],
+                packages: [
+                    "nvidia-beta",
+                ],
+                configurations: [],
+                pre_install_script: None,
+                post_install_script: None,
+            ),
+            (
+                order_of_priority: 2,
                 name: "Nvidia DKMS",
                 description: "Graphics driver (that uses DKMS) for Nvidia GPU from the `nvidia-dkms` package found in the official Arch Linux `Extra` repository.",
                 tags: [
@@ -524,6 +527,7 @@
             )),
         ]: [
             (
+                order_of_priority: 1,
                 name: "Nvidia Open",
                 description: "Graphics driver for Nvidia GPU from the `nvidia-open` package found in the official Arch Linux `Extra` repository.",
                 tags: [

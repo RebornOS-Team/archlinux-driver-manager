@@ -6,6 +6,9 @@ use crate::error::{Error, InputFileParseSnafu};
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct DriverEntry {
+    #[serde(default, alias="order-of-priority", alias="order", alias="priority")]
+    pub order_of_priority: u32,
+
     #[serde(default)] 
     pub name: String,
 
@@ -147,6 +150,7 @@ mod tests {
     #[test]
     pub fn serialize_deserialize_input_data() {
         let driver_entry_1 = DriverEntry {
+            order_of_priority: 1,
             name: "Nvidia".to_string(),
             description: "Graphics driver for Nvidia GPU from the `nvidia` package found in the official Arch Linux `Extra` repository.".to_string(),
             hardware_kind: HardwareKind::Graphics,

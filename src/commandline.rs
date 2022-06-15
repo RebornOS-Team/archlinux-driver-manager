@@ -317,10 +317,17 @@ pub mod commandline_interface_template {
         pub tags: Vec<String>,
 
         #[clap(
+            long = "enable-aur",
+            help = "Enable installing from the Arch User Repository (AUR).",
+            display_order = 33
+        )]
+        pub enable_aur: bool,
+
+        #[clap(
             long = "database",
             help = "Path to the `ron` database file to use for searching drivers.",
             default_value = "database.ron",
-            display_order = 33
+            display_order = 34
         )]
         pub database_file: PathBuf,
     }
@@ -328,7 +335,7 @@ pub mod commandline_interface_template {
     #[derive(Debug, Args)]
     pub struct GenerateDatabaseActionArguments {
         #[clap(
-            help = "Path to the input file (Only YAML, JSON, and RON are supported).",
+            help = "Path to the input file (Only YAML is currently supported).",
             display_order = 41
         )]
         pub input_file: PathBuf,

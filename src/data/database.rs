@@ -39,8 +39,8 @@ pub enum HardwareKind {
 pub struct DriverListing {
     // The entire BtreeSet<HardwareId> will be used as a key.
     // A HashSet<HardwareId> will not be a key because the set as a whole is not `Eq` (due to internal ordering changes)
-    // However, we can use HashSet<DriverRecord> because the set as a whole is not used as a key. We merely want it to be internally unique.
-    inner: HashMap<BTreeSet<HardwareId>, HashSet<DriverRecord>>,
+    // However, we can use BTreeSet<DriverRecord> because the set as a whole is not used as a key. We merely want it to be internally unique.
+    inner: HashMap<BTreeSet<HardwareId>, BTreeSet<DriverRecord>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -51,6 +51,7 @@ pub enum HardwareId {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct DriverRecord {
+    pub order_of_priority: u32,
     pub name: String,
     pub description: String,
     pub tags: BTreeSet<String>,
@@ -296,7 +297,7 @@ impl From<input_file::HardwareKind> for HardwareKind {
 impl DriverListing {
     pub fn new() -> Self {
         Self {
-            inner: HashMap::<BTreeSet<HardwareId>, HashSet<DriverRecord>>::new(),
+            inner: HashMap::<BTreeSet<HardwareId>, BTreeSet<DriverRecord>>::new(),
         }
     }
 
@@ -315,7 +316,7 @@ impl DriverListing {
 }
 
 impl Deref for DriverListing {
-    type Target = HashMap<BTreeSet<HardwareId>, HashSet<DriverRecord>>;
+    type Target = HashMap<BTreeSet<HardwareId>, BTreeSet<DriverRecord>>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -523,6 +524,6 @@ impl From<input_file::ScriptKind> for ScriptKind {
     }
 }
 
-pub fn convert_tag<S: AsRef<str>>(tag: S) -> String{
+pub fn convert_tag<S: AsRef<str>>(tag: S) -> String {
     tag.as_ref().trim().replace("-", " ").replace("_", " ")
 }

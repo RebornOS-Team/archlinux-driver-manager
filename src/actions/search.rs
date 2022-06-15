@@ -1,6 +1,8 @@
 use crate::{
     commandline::{CommandlinePrint, SearchActionArguments},
-    data::database::{DriverDatabase, DriverRecord, HardwareId, HardwareKind, PciId, UsbId, DriverListing},
+    data::database::{
+        DriverDatabase, DriverListing, DriverRecord, HardwareId, HardwareKind, PciId, UsbId,
+    },
     error::{DatabaseSnafu, Error},
 };
 use aparato::{Device, Fetch, PCIDevice};
@@ -20,19 +22,19 @@ use std::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct SearchActionOutput {
-    inner: HashMap<HardwareKind, HashSet<DriverRecord>>,
+    inner: HashMap<HardwareKind, BTreeSet<DriverRecord>>,
 }
 
 impl SearchActionOutput {
     pub fn new() -> Self {
         SearchActionOutput {
-            inner: HashMap::<HardwareKind, HashSet<DriverRecord>>::new(),
+            inner: HashMap::<HardwareKind, BTreeSet<DriverRecord>>::new(),
         }
     }
 }
 
 impl Deref for SearchActionOutput {
-    type Target = HashMap<HardwareKind, HashSet<DriverRecord>>;
+    type Target = HashMap<HardwareKind, BTreeSet<DriverRecord>>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -148,7 +150,7 @@ pub fn relevant_drivers<T: IntoIterator<Item = String>>(
     database_filepath: PathBuf,
     optional_hardware: Option<HardwareKind>,
     tags: T,
-) -> Result<HashMap<HardwareKind, HashSet<DriverRecord>>, Error> {
+) -> Result<HashMap<HardwareKind, BTreeSet<DriverRecord>>, Error> {
     let driver_database = DriverDatabase::with_database_path(database_filepath)?;
     driver_database.load().context(DatabaseSnafu {})?;
 
@@ -156,23 +158,22 @@ pub fn relevant_drivers<T: IntoIterator<Item = String>>(
 
     let filter_tags: BTreeSet<String> = tags.into_iter().collect();
 
-    let mut relevant_driver_records = HashMap::<HardwareKind, HashSet<DriverRecord>>::new();
+    let mut relevant_driver_records = HashMap::<HardwareKind, BTreeSet<DriverRecord>>::new();
 
-    let mut process_hardware_listing_entry = |hardware_kind: &HardwareKind, driver_listing: &DriverListing| {
-        for (hardware_ids, driver_records) in driver_listing.iter() {
-            if !hardware_ids.is_disjoint(&hardware_ids_present) {
-                relevant_driver_records
-                    .entry(hardware_kind.to_owned())
-                    .or_default()
-                    .extend(driver_records.clone().into_iter().filter(
-                        |driver_record| {
+    let mut process_hardware_listing_entry =
+        |hardware_kind: &HardwareKind, driver_listing: &DriverListing| {
+            for (hardware_ids, driver_records) in driver_listing.iter() {
+                if !hardware_ids.is_disjoint(&hardware_ids_present) {
+                    relevant_driver_records
+                        .entry(hardware_kind.to_owned())
+                        .or_default()
+                        .extend(driver_records.clone().into_iter().filter(|driver_record| {
                             // println!("filter_tags: {:?}, tags: {:?}, driver_name: {}", filter_tags, driver_record.tags, driver_record.name);
                             filter_tags.is_empty() || !driver_record.tags.is_disjoint(&filter_tags)
-                        },
-                    ));
+                        }));
+                }
             }
-        }
-    };
+        };
 
     if let Some(hardware_kind) = optional_hardware {
         driver_database
@@ -196,13 +197,11 @@ pub fn relevant_drivers<T: IntoIterator<Item = String>>(
 }
 
 pub fn search(search_action_arguments: SearchActionArguments) -> Result<SearchActionOutput, Error> {
-    Ok(
-        SearchActionOutput {
-            inner: relevant_drivers(
-                search_action_arguments.database_file,
-                search_action_arguments.hardware,
-                search_action_arguments.tags,
-            )?,
-        }    
-    )
+    Ok(SearchActionOutput {
+        inner: relevant_drivers(
+            search_action_arguments.database_file,
+            search_action_arguments.hardware,
+            search_action_arguments.tags,
+        )?,
+    })
 }
