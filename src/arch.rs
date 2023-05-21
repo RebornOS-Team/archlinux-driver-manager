@@ -25,12 +25,16 @@ impl PackageManager {
 
     pub fn install<S: AsRef<str>, T: IntoIterator<Item = S>>(
         &mut self,
-        package_names: T,
+        packages_to_install: T,
+        packages_to_remove: T,
     ) -> Result<(), Error> {
         let flags = TransFlag::NONE;
         self.handle.trans_init(flags).unwrap();
 
-        for package_name in package_names {
+        let mut actual_install_list = Vec::<String>::new();
+        let mut actual_remove_list = Vec::<String>::new();
+
+        for package_name in packages_to_install {
             let package_name = package_name.as_ref();
 
             let package = self
@@ -40,7 +44,8 @@ impl PackageManager {
                 .find_map(|db| db.pkg(package_name).ok());
 
             if let Some(package) = package {
-                self.handle.trans_add_pkg(package).unwrap();                
+                self.handle.trans_add_pkg(package).unwrap();  
+                actual_install_list.push(package_name.to_owned());
             } else {
                 self.handle.trans_release().unwrap();
                 PackageNotFoundSnafu {
@@ -49,8 +54,25 @@ impl PackageManager {
             }
         }
 
+        for package_name in packages_to_remove {
+            let package_name = package_name.as_ref();
+
+            let package = self.get(package_name);
+
+            if let Some(package) = package {
+                self.handle.trans_remove_pkg(package).unwrap();  
+                actual_remove_list.push(package_name.to_owned());              
+            } else {
+                self.handle.trans_release().unwrap();
+                PackageNotFoundSnafu {
+                    name: package_name,
+                }.fail()?;
+            }              
+        }
+
         self.handle.trans_prepare().unwrap();
-        println!("Installing: {:#?}", self.handle.trans_add());
+        println!("Installing: {:#?}", actual_install_list);
+        println!("Removing: {:#?}", actual_remove_list);
 
         self.handle.trans_commit().unwrap();
 

@@ -1,13 +1,14 @@
-use std::collections::BTreeSet;
-use std::path::PathBuf;
-use serde::{Deserialize, Serialize};
 use crate::{
+    actions::list::list_inner,
+    actions::search::search_inner,
+    arch::PackageManager,
     commandline::{CommandlinePrint, InstallActionArguments},
     data::database::{DriverRecord, HardwareKind},
     error::Error,
-    actions::search::search_inner,
-    arch::PackageManager,
 };
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
+use std::path::PathBuf;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct InstallActionOutput {}
@@ -26,15 +27,42 @@ pub fn install_inner<T: IntoIterator<Item = String>>(
     database_filepath: PathBuf,
     hardware: HardwareKind,
     tags: T,
-    enable_aur: bool,
+    _enable_aur: bool,
 ) -> Result<InstallActionOutput, Error> {
-    let relevant_driver_records = search_inner(database_filepath, Some(hardware), tags)?
+    let relevant_driver_records = search_inner(database_filepath.clone(), Some(hardware), tags)?
         .into_values()
-        .collect::<Vec<BTreeSet<DriverRecord>>>().pop().unwrap();
-    
-    let package_names = relevant_driver_records.iter().next().expect("Error: Nothing to install").packages.clone();
+        .collect::<Vec<BTreeSet<DriverRecord>>>()
+        .pop()
+        .unwrap();
+
+    let packages_to_install = relevant_driver_records
+        .iter()
+        .next()
+        .expect("Error: Nothing to install")
+        .packages
+        .clone();
+    let packages_to_remove = list_inner(database_filepath.clone(), Some(hardware), None).map_or(
+        Vec::<String>::new(),
+        |installed_hash_map| {
+            installed_hash_map.into_iter().fold(
+                Vec::<String>::new(),
+                |mut acc, (_hardware_kind, hash_set)| {
+                    acc.append(hash_set.into_iter().fold(
+                        &mut Vec::<String>::new(),
+                        |acc, installed_package| {
+                            if !packages_to_install.contains(&installed_package.name) {
+                                acc.push(installed_package.name);
+                            }
+                            acc
+                        },
+                    ));
+                    acc
+                },
+            )
+        },
+    );
     let mut package_manager = PackageManager::new();
-    package_manager.install(package_names)?;
+    package_manager.install(packages_to_install, packages_to_remove)?;
 
     Ok(InstallActionOutput::default())
 }

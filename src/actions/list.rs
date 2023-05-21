@@ -23,8 +23,8 @@ pub struct ListActionOutput {
 
 #[derive(Default, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct InstalledPackage {
-    name: String,
-    version: String,
+    pub name: String,
+    pub version: String,
 }
 
 impl ListActionOutput {
