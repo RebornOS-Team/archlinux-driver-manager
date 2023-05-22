@@ -1,6 +1,6 @@
 use crate::{
     data::input_file,
-    error::{DatabaseSnafu, InvalidEnumValueSnafu, Error},
+    error::{DatabaseSnafu, Error, InvalidEnumValueSnafu},
 };
 use derivative::Derivative;
 use rustbreak::{deser::Ron, FileDatabase};
@@ -144,9 +144,19 @@ pub enum ParseUsbIdError {
 
 impl DriverDatabase {
     pub fn with_database_path(filepath: PathBuf) -> Result<Self, Error> {
+        let mut temp_database_file = tempfile::NamedTempFile::new().expect(
+            "Could not create a temporary file with write permissions to create a database.",
+        );
+        std::io::copy(
+            &mut std::fs::File::open(filepath).expect("Could not open the database file."),
+            &mut temp_database_file,
+        )
+        .unwrap();
         Ok(DriverDatabase {
-            inner: FileDatabase::<HardwareListing, Ron>::load_from_path_or_default(filepath)
-                .context(DatabaseSnafu {})?,
+            inner: FileDatabase::<HardwareListing, Ron>::load_from_path(
+                temp_database_file.into_temp_path(),
+            )
+            .context(DatabaseSnafu {})?,
         })
     }
 

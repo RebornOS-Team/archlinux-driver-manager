@@ -43,5 +43,5 @@ usb_enumeration = "0.2.0"
 
 # Miscellaneous
 snafu = "0.7"
-
-
+tempfile = "3.5"
+sudo = "0.6"

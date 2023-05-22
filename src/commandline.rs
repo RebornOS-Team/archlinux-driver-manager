@@ -342,7 +342,7 @@ pub mod commandline_interface_template {
 
         #[clap(
             help = "Path to the `ron` database file to generate.",
-            default_value = "/var/lib/archlinux-driver-manager/database.ron",
+            default_value = "database.ron",
             display_order = 42
         )]
         pub database_file: PathBuf,

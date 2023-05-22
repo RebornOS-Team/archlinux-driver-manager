@@ -70,6 +70,7 @@ pub fn install_inner<T: IntoIterator<Item = String>>(
 pub fn install(
     install_action_arguments: InstallActionArguments,
 ) -> Result<InstallActionOutput, Error> {
+    sudo::escalate_if_needed().expect("ERROR: Could not get superuser privileges...");
     Ok(install_inner(
         install_action_arguments.database_file,
         install_action_arguments.hardware,
