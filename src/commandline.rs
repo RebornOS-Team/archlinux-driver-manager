@@ -267,7 +267,7 @@ pub mod commandline_interface_template {
         #[clap(
             long = "database",
             help = "Path to the `ron` database file to use for recognizing drivers.",
-            default_value = "database.ron",
+            default_value = "/var/lib/archlinux-driver-manager/database.ron",
             display_order = 13
         )]
         pub database_file: PathBuf,
@@ -293,7 +293,7 @@ pub mod commandline_interface_template {
         #[clap(
             long = "database",
             help = "Path to the `ron` database file to use for searching drivers.",
-            default_value = "database.ron",
+            default_value = "/var/lib/archlinux-driver-manager/database.ron",
             display_order = 23
         )]
         pub database_file: PathBuf,
@@ -326,7 +326,7 @@ pub mod commandline_interface_template {
         #[clap(
             long = "database",
             help = "Path to the `ron` database file to use for searching drivers.",
-            default_value = "database.ron",
+            default_value = "/var/lib/archlinux-driver-manager/database.ron",
             display_order = 34
         )]
         pub database_file: PathBuf,
@@ -342,7 +342,7 @@ pub mod commandline_interface_template {
 
         #[clap(
             help = "Path to the `ron` database file to generate.",
-            default_value = "database.ron",
+            default_value = "/var/lib/archlinux-driver-manager/database.ron",
             display_order = 42
         )]
         pub database_file: PathBuf,
