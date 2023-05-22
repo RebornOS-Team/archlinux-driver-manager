@@ -2,7 +2,7 @@ use crate::{
     actions::list::list_inner,
     actions::search::search_inner,
     arch::PackageManager,
-    commandline::{CommandlinePrint, InstallActionArguments},
+    cli::{CommandlinePrint, InstallActionArguments},
     data::database::{DriverRecord, HardwareKind},
     error::Error,
 };

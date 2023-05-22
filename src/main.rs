@@ -1,4 +1,4 @@
-use archlinux_driver_manager::commandline::*;
+use archlinux_driver_manager::cli::*;
 
 fn main() {
     let archlinux_driver_manager_app = CommandlineInterface::new();

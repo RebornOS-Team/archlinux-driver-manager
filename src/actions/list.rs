@@ -1,6 +1,6 @@
 use crate::arch::PackageManager;
 use crate::{
-    commandline::{CommandlinePrint, ListActionArguments},
+    cli::{CommandlinePrint, ListActionArguments},
     data::database::{DriverDatabase, HardwareKind},
     error::{DatabaseSnafu, Error},
 };

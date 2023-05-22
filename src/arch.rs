@@ -1,7 +1,7 @@
+use crate::error::{Error, PackageNotFoundSnafu};
 use alpm::{Alpm, Package, TransFlag};
 use alpm_utils::alpm_with_conf;
 use pacmanconf::Config;
-use crate::error::{Error, PackageNotFoundSnafu};
 
 pub const PACMAN_CONFIG_PATH: &str = "/etc/pacman.conf";
 
@@ -44,13 +44,11 @@ impl PackageManager {
                 .find_map(|db| db.pkg(package_name).ok());
 
             if let Some(package) = package {
-                self.handle.trans_add_pkg(package).unwrap();  
+                self.handle.trans_add_pkg(package).unwrap();
                 actual_install_list.push(package_name.to_owned());
             } else {
                 self.handle.trans_release().unwrap();
-                PackageNotFoundSnafu {
-                    name: package_name,
-                }.fail()?;
+                PackageNotFoundSnafu { name: package_name }.fail()?;
             }
         }
 
@@ -60,14 +58,12 @@ impl PackageManager {
             let package = self.get(package_name);
 
             if let Some(package) = package {
-                self.handle.trans_remove_pkg(package).unwrap();  
-                actual_remove_list.push(package_name.to_owned());              
+                self.handle.trans_remove_pkg(package).unwrap();
+                actual_remove_list.push(package_name.to_owned());
             } else {
                 self.handle.trans_release().unwrap();
-                PackageNotFoundSnafu {
-                    name: package_name,
-                }.fail()?;
-            }              
+                PackageNotFoundSnafu { name: package_name }.fail()?;
+            }
         }
 
         self.handle.trans_prepare().unwrap();

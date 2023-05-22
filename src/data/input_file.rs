@@ -1,62 +1,71 @@
-use std::{fs::File, path::PathBuf, collections::{HashMap, BTreeSet}};
+use std::{
+    collections::{BTreeSet, HashMap},
+    fs::File,
+    path::PathBuf,
+};
 
-use serde::{Serialize, Deserialize};
-use snafu::ResultExt;
 use crate::error::{Error, InputFileParseSnafu};
+use serde::{Deserialize, Serialize};
+use snafu::ResultExt;
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct DriverEntry {
-    #[serde(default, alias="order-of-priority", alias="order", alias="priority")]
+    #[serde(
+        default,
+        alias = "order-of-priority",
+        alias = "order",
+        alias = "priority"
+    )]
     pub order_of_priority: u32,
 
-    #[serde(default)] 
+    #[serde(default)]
     pub name: String,
 
-    #[serde(default)] 
+    #[serde(default)]
     pub description: String,
 
     pub hardware_kind: HardwareKind,
 
-    #[serde(default)] 
+    #[serde(default)]
     pub tags: BTreeSet<String>,
 
-    #[serde(default)] 
+    #[serde(default)]
     pub ids: Vec<HardwareIdEntry>,
 
-    #[serde(default)] 
+    #[serde(default)]
     pub packages: Vec<String>,
 
-    #[serde(default, alias = "configs")] 
+    #[serde(default, alias = "configs")]
     pub configurations: Vec<Configuration>,
 
     #[serde(default)]
     pub pre_install: Option<Script>,
 
-    #[serde(default)] 
+    #[serde(default)]
     pub post_install: Option<Script>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum HardwareKind {
-    #[serde(alias="GRAPHICS", alias="graphics")]
+    #[serde(alias = "GRAPHICS", alias = "graphics")]
     Graphics,
 
-    #[serde(alias="ETHERNET", alias="ethernet")]
+    #[serde(alias = "ETHERNET", alias = "ethernet")]
     Ethernet,
 
-    #[serde(alias="WIRELESS", alias="wireless")]
+    #[serde(alias = "WIRELESS", alias = "wireless")]
     Wireless,
 
-    #[serde(alias="SOUND", alias="sound")]
+    #[serde(alias = "SOUND", alias = "sound")]
     Sound,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum HardwareIdEntry {
-    #[serde(alias="PCI", alias="pci")]
+    #[serde(alias = "PCI", alias = "pci")]
     Pci(PciIdList),
 
-    #[serde(alias="USB", alias="usb")]
+    #[serde(alias = "USB", alias = "usb")]
     Usb(UsbIdList),
 }
 
@@ -87,31 +96,31 @@ pub struct Configuration {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum ConfigurationFormat {
-    #[serde(alias="INI", alias="ini")]
+    #[serde(alias = "INI", alias = "ini")]
     Ini,
 
-    #[serde(alias="JSON", alias="json")]
+    #[serde(alias = "JSON", alias = "json")]
     Json,
 
-    #[serde(alias="YAML", alias="yaml")]
+    #[serde(alias = "YAML", alias = "yaml")]
     Yaml,
 
-    #[serde(alias="TOML", alias="toml")]
+    #[serde(alias = "TOML", alias = "toml")]
     Toml,
 
-    #[serde(alias="XML", alias="xml")]
+    #[serde(alias = "XML", alias = "xml")]
     Xml,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ScriptKind {
-    #[serde(alias="Py", alias="py")]
+    #[serde(alias = "Py", alias = "py")]
     Python,
 
-    #[serde(alias="Js", alias="js")]
+    #[serde(alias = "Js", alias = "js")]
     JavaScript,
 
-    #[serde(alias="Sh", alias="sh")]
+    #[serde(alias = "Sh", alias = "sh")]
     Shell,
 }
 
@@ -129,14 +138,12 @@ impl Default for HardwareIdEntry {
 
 pub fn parse_input_file(path: PathBuf) -> Result<Vec<DriverEntry>, Error> {
     let file = File::open(&path).unwrap();
-    Ok(serde_yaml::from_reader(&file).context(InputFileParseSnafu{
-        path: path,
-    })?)
+    Ok(serde_yaml::from_reader(&file).context(InputFileParseSnafu { path: path })?)
 }
 
 #[cfg(test)]
 mod tests {
-    use std::{fs::File};
+    use std::fs::File;
 
     use super::*;
 
@@ -181,11 +188,11 @@ mod tests {
             ],
             pre_install: Some(Script {
                 path: "dummy_pre.py".into(),
-                language: ScriptKind::Python, 
+                language: ScriptKind::Python,
             }),
             post_install: Some(Script {
                 path: "dummy_post.sh".into(),
-                language: ScriptKind::Shell, 
+                language: ScriptKind::Shell,
             }),
         };
         let serialized_string = serde_yaml::to_string(&driver_entry_1).unwrap();

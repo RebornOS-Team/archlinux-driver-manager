@@ -26,7 +26,7 @@ pub struct HardwareListing {
     inner: HashMap<HardwareKind, DriverListing>,
 }
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, clap::ArgEnum)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, clap::ValueEnum)]
 pub enum HardwareKind {
     Graphics,
     Ethernet,

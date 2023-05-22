@@ -1,5 +1,5 @@
 use crate::{
-    commandline::{CommandlinePrint, GenerateDatabaseActionArguments},
+    cli::{CommandlinePrint, GenerateDatabaseActionArguments},
     data::{database, input_file},
     error::Error,
 };
@@ -102,7 +102,10 @@ fn convert_hardware_ids(
     btree_set
 }
 
-pub fn generate_database_inner(input_file: PathBuf, database_file: PathBuf) -> Result<GenerateDatabaseActionOutput, Error> {
+pub fn generate_database_inner(
+    input_file: PathBuf,
+    database_file: PathBuf,
+) -> Result<GenerateDatabaseActionOutput, Error> {
     let input_driver_listing = input_file::parse_input_file(input_file)?;
     let driver_database = database::DriverDatabase::create_with_database_path(database_file)?;
     driver_database
@@ -144,7 +147,7 @@ pub fn generate_database_inner(input_file: PathBuf, database_file: PathBuf) -> R
 
 pub fn generate_database(
     generate_database_action_arguments: GenerateDatabaseActionArguments,
-) -> Result<GenerateDatabaseActionOutput, Error> {  
+) -> Result<GenerateDatabaseActionOutput, Error> {
     Ok(generate_database_inner(
         generate_database_action_arguments.input_file,
         generate_database_action_arguments.database_file,

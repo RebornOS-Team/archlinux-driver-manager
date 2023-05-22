@@ -157,15 +157,15 @@ impl CommandlineInterface {
 }
 
 pub mod commandline_interface_template {
+    use super::CommandlineFlags;
+    use crate::data::database::HardwareKind;
     use clap::{Args, Parser, Subcommand};
     use std::path::PathBuf;
 
-    use crate::data::database::HardwareKind;
-
-    use super::CommandlineFlags;
-
+    /// The big picture of the commandline-interface. This structure contains
+    /// the outermost sub-commands of the interface.
     #[derive(Debug, Parser)]
-    #[clap(version, author, about, args_conflicts_with_subcommands = true)]
+    #[command(author, version, about, args_conflicts_with_subcommands = true)]
     pub struct Cli {
         #[clap(flatten)]
         pub global_arguments: GlobalArguments,
@@ -183,7 +183,7 @@ pub mod commandline_interface_template {
         #[clap(
                 long = "json",
                 help = "Output in the JSON format for machine readability and scripting purposes.",
-                takes_value = false,
+                num_args = 0,
                 global = true,
                 display_order = usize::MAX - 3,
             )]
@@ -192,7 +192,7 @@ pub mod commandline_interface_template {
         #[clap(
                 long = "plain",
                 help = "Output as plain text without extra information, for machine readability and scripting purposes.",
-                takes_value = false,
+                num_args = 0,
                 global = true,
                 display_order = usize::MAX - 2,
             )]
@@ -201,7 +201,7 @@ pub mod commandline_interface_template {
         #[clap(
                 long = "debug",
                 help = "Output debug messages.",
-                takes_value = false,
+                num_args = 0,
                 global = true,
                 display_order = usize::MAX - 1,
             )]
@@ -250,7 +250,7 @@ pub mod commandline_interface_template {
     #[derive(Debug, Args)]
     pub struct ListActionArguments {
         #[clap(
-            arg_enum,
+            value_enum,
             help = "The hardware to list installed drivers for.",
             display_order = 11
         )]
@@ -276,7 +276,7 @@ pub mod commandline_interface_template {
     #[derive(Debug, Args)]
     pub struct SearchActionArguments {
         #[clap(
-            arg_enum,
+            value_enum,
             help = "The hardware to search drivers for.",
             display_order = 21
         )]
@@ -302,7 +302,7 @@ pub mod commandline_interface_template {
     #[derive(Debug, Args)]
     pub struct InstallActionArguments {
         #[clap(
-            arg_enum,
+            value_enum,
             help = "The hardware to install drivers for.",
             display_order = 31
         )]

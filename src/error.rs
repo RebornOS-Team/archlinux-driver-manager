@@ -27,10 +27,6 @@ pub enum Error {
         allowed_values: Vec<String>,
     },
 
-    #[snafu(
-        display("Package {name} was not found...")
-    )]
-    PackageNotFound {
-        name: String,
-    },
+    #[snafu(display("Package {name} was not found..."))]
+    PackageNotFound { name: String },
 }

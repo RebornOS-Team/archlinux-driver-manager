@@ -1,5 +1,5 @@
 use crate::{
-    commandline::{CommandlinePrint, SearchActionArguments},
+    cli::{CommandlinePrint, SearchActionArguments},
     data::database::{
         DriverDatabase, DriverListing, DriverRecord, HardwareId, HardwareKind, PciId, UsbId,
     },
