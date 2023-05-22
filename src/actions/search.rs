@@ -1,7 +1,9 @@
 use crate::{
     cli::{CommandlinePrint, SearchActionArguments},
-    data::database::{
-        DriverDatabase, DriverListing, DriverRecord, HardwareId, HardwareKind, PciId, UsbId,
+    data::database::DriverDatabase,
+    data::{
+        database::{HardwareId, PciId, UsbId},
+        input_file::{DriverOption, HardwareCase, HardwareKind},
     },
     error::{DatabaseSnafu, Error},
 };
@@ -19,19 +21,19 @@ use std::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct SearchActionOutput {
-    inner: HashMap<HardwareKind, BTreeSet<DriverRecord>>,
+    inner: HashMap<HardwareKind, BTreeSet<DriverOption>>,
 }
 
 impl SearchActionOutput {
     pub fn new() -> Self {
         SearchActionOutput {
-            inner: HashMap::<HardwareKind, BTreeSet<DriverRecord>>::new(),
+            inner: HashMap::<HardwareKind, BTreeSet<DriverOption>>::new(),
         }
     }
 }
 
 impl Deref for SearchActionOutput {
-    type Target = HashMap<HardwareKind, BTreeSet<DriverRecord>>;
+    type Target = HashMap<HardwareKind, BTreeSet<DriverOption>>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -124,8 +126,8 @@ fn hardware_ids_present() -> BTreeSet<HardwareId> {
                 slot: _,
                 function: _,
             } => Some(HardwareId::Pci(PciId {
-                vendor_id: item.vendor_id(),
-                device_id: item.product_id(),
+                vendor: item.vendor_id(),
+                device: item.product_id(),
             })),
             devices::DevicePath::USB { bus: _, device: _ } => None,
         });
@@ -134,8 +136,8 @@ fn hardware_ids_present() -> BTreeSet<HardwareId> {
         .into_iter()
         .map(|item| {
             HardwareId::Usb(UsbId {
-                vendor_id: item.vendor_id,
-                device_id: item.product_id,
+                vendor: item.vendor_id,
+                device: item.product_id,
             })
         });
 
@@ -149,15 +151,57 @@ pub fn search_inner<T: IntoIterator<Item = String>>(
     database_filepath: PathBuf,
     optional_hardware: Option<HardwareKind>,
     tags: T,
-) -> Result<HashMap<HardwareKind, BTreeSet<DriverRecord>>, Error> {
+) -> Result<HashMap<HardwareKind, BTreeSet<DriverOption>>, Error> {
     let driver_database = DriverDatabase::with_database_path(database_filepath)?;
-    driver_database.load().context(DatabaseSnafu {})?;
+
+    // Open a read-only transaction to get the data
+    let transaction = driver_database.tx(false).context(DatabaseSnafu {})?;
 
     let hardware_ids_present = hardware_ids_present();
 
     let filter_tags: BTreeSet<String> = tags.into_iter().collect();
 
-    let mut relevant_driver_records = HashMap::<HardwareKind, BTreeSet<DriverRecord>>::new();
+    let pci_ids_to_hardware_case_ids_bucket = transaction
+        .get_bucket("pci_ids_to_hardware_case_ids_bucket")
+        .context(DatabaseSnafu)?;
+
+    let usb_ids_to_hardware_case_ids_bucket = transaction
+        .get_bucket("usb_ids_to_hardware_case_ids_bucket")
+        .context(DatabaseSnafu)?;
+
+    let hardware_case_ids_to_driver_options_bucket: jammdb::Bucket = transaction
+        .get_bucket("hardware_case_ids_to_driver_options")
+        .context(DatabaseSnafu)?;
+
+    let mut relevant_hardware_case_ids = BTreeSet::<String>::new();
+
+    for hardware_id_present in hardware_ids_present {
+        match hardware_id_present {
+            HardwareId::Pci(pci_id) => {
+                if let Some(data) = pci_ids_to_hardware_case_ids_bucket.get(pci_id.into()) {
+                    relevant_hardware_case_ids
+                        .insert(String::from_utf8_lossy(data.kv().value()).to_string());
+                }
+            }
+            HardwareId::Usb(usb_id) => {
+                if let Some(data) = usb_ids_to_hardware_case_ids_bucket.get(usb_id.into()) {
+                    relevant_hardware_case_ids
+                        .insert(String::from_utf8_lossy(data.kv().value()).to_string());
+                }
+            }
+        }
+    }
+
+    let mut relevant_driver_options = HashMap::<HardwareKind, BTreeSet<DriverOption>>::new();
+
+    for relevant_hardware_case_id in relevant_hardware_case_ids {
+        if let Some(data) =
+            hardware_case_ids_to_driver_options_bucket.get(relevant_hardware_case_id.into())
+        {
+            let driver_option: DriverOption = rmp_serde::from_slice(data.kv().value()).unwrap();
+            if 
+        }
+    }
 
     let mut process_hardware_listing_entry =
         |hardware_kind: &HardwareKind, driver_listing: &DriverListing| {
@@ -192,7 +236,7 @@ pub fn search_inner<T: IntoIterator<Item = String>>(
             .unwrap();
     }
 
-    Ok(relevant_driver_records)
+    Ok(relevant_driver_options)
 }
 
 pub fn search(search_action_arguments: SearchActionArguments) -> Result<SearchActionOutput, Error> {
