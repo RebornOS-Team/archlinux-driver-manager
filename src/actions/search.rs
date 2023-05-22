@@ -5,18 +5,15 @@ use crate::{
     },
     error::{DatabaseSnafu, Error},
 };
-use aparato::{Device, Fetch, PCIDevice};
+use devices;
 use owo_colors::{OwoColorize, Stream::Stdout};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
+use std::{collections::BTreeSet, fmt::Display};
 use std::{
     collections::HashMap,
     ops::{Deref, DerefMut},
     path::PathBuf,
-};
-use std::{
-    collections::BTreeSet,
-    fmt::Display,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -118,18 +115,20 @@ impl CommandlinePrint for SearchActionOutput {
 fn hardware_ids_present() -> BTreeSet<HardwareId> {
     let mut hardware_ids_present = BTreeSet::<HardwareId>::new();
 
-    let pci_ids_present = PCIDevice::fetch(None).into_iter().map(|item| {
-        HardwareId::Pci(PciId {
-            vendor_id: {
-                let vendor_id_byte_array = item.vendor_id();
-                (vendor_id_byte_array[0] as u16) * 16u16.pow(2) + (vendor_id_byte_array[1] as u16)
-            },
-            device_id: {
-                let device_id_byte_array = item.device_id();
-                (device_id_byte_array[0] as u16) * 16u16.pow(2) + (device_id_byte_array[1] as u16)
-            },
-        })
-    });
+    let pci_ids_present = devices::Devices::get()
+        .expect("Failed to get connected devices")
+        .into_iter()
+        .filter_map(|item| match item.path() {
+            devices::DevicePath::PCI {
+                bus: _,
+                slot: _,
+                function: _,
+            } => Some(HardwareId::Pci(PciId {
+                vendor_id: item.vendor_id(),
+                device_id: item.product_id(),
+            })),
+            devices::DevicePath::USB { bus: _, device: _ } => None,
+        });
 
     let usb_ids_present = usb_enumeration::enumerate(None, None)
         .into_iter()
