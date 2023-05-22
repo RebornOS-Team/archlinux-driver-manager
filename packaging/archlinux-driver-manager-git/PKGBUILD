@@ -1,0 +1,58 @@
+#! /usr/bin/env sh
+
+# Maintainer: shivanandvp <shivanandvp@rebornos.org>
+
+pkgver=0.1.0
+pkgrel=1
+
+PACKAGE_NAME_STUB="archlinux-driver-manager"
+pkgname="$PACKAGE_NAME_STUB-git"
+provides=("$PACKAGE_NAME_STUB")
+conflicts=("$PACKAGE_NAME_STUB" "$PACKAGE_NAME_STUB-local")
+depends=('pacman' 'pciutils' 'usbutils')
+makedepends=('git' 'cargo')
+source=("git+https://github.com/RebornOS-Developers/$PACKAGE_NAME_STUB") 
+sha256sums=('SKIP')
+PROJECT_DIRECTORY="${srcdir}/$PACKAGE_NAME_STUB"
+RESOURCE_DIRECTORY="$PROJECT_DIRECTORY/packaging/resources"
+BUILD_DIRECTORY="$PROJECT_DIRECTORY/target"
+
+arch=('x86_64' 'aarch64')
+pkgdesc='A driver manager for Arch Linux.'
+url="https://github.com/RebornOS-Developers/$PACKAGE_NAME_STUB"
+license=('MPL-2.0')
+
+pkgver() {
+    (   cd "${srcdir}/$PACKAGE_NAME_STUB"
+        set -o pipefail
+        git describe --long 2>/dev/null | sed 's/\([^-]*-g\)/r\1/;s/-/./g' ||
+        printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+    )
+}
+
+prepare() {
+    cd "$PROJECT_DIRECTORY"
+    RUSTUP_TOOLCHAIN=stable \
+    cargo fetch \
+        --locked
+}
+
+build() {     
+    cd "$PROJECT_DIRECTORY"
+    RUSTUP_TOOLCHAIN=stable \
+    cargo build \
+        --release \
+        --locked \
+        --all-features \
+        --target-dir="target"
+}
+
+package() {
+    # To bypass makepkg's dependency check during build-time
+    optdepends+=("$PACKAGE_NAME_STUB-db")
+
+    cd "$PROJECT_DIRECTORY"
+    install -Dm644 "LICENSE" "$pkgdir/usr/share/licenses/$PACKAGE_NAME_STUB/LICENSE"
+    install -Dm755 "target/release/$PACKAGE_NAME_STUB" "$pkgdir/usr/bin/$PACKAGE_NAME_STUB"
+    ln -s "/usr/bin/$PACKAGE_NAME_STUB" "$pkgdir/usr/bin/aldm"
+}

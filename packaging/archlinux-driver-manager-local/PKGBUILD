@@ -1,0 +1,50 @@
+#! /usr/bin/env sh
+
+# Maintainer: shivanandvp <shivanandvp@rebornos.org>
+
+pkgver=0.1.0
+pkgrel=1
+
+PACKAGE_NAME_STUB="archlinux-driver-manager"
+pkgname="$PACKAGE_NAME_STUB-local"
+provides=("$PACKAGE_NAME_STUB")
+conflicts=("$PACKAGE_NAME_STUB" "$PACKAGE_NAME_STUB-git")
+depends=('pacman' 'pciutils' 'usbutils')
+makedepends=('cargo')
+source=()
+sha256sums=()
+PROJECT_DIRECTORY="$(dirname -- "$(dirname -- "$(pwd)")")"
+RESOURCE_DIRECTORY="$PROJECT_DIRECTORY/packaging/resources"
+BUILD_DIRECTORY="$PROJECT_DIRECTORY/target"
+
+arch=('x86_64' 'aarch64')
+pkgdesc='A driver manager for Arch Linux.'
+url="https://github.com/RebornOS-Developers/$PACKAGE_NAME_STUB"
+license=('MPL-2.0')
+
+prepare() {
+    cd "$PROJECT_DIRECTORY"
+    RUSTUP_TOOLCHAIN=stable \
+    cargo fetch \
+        --locked
+}
+
+build() {     
+    cd "$PROJECT_DIRECTORY"
+    RUSTUP_TOOLCHAIN=stable \
+    cargo build \
+        --release \
+        --locked \
+        --all-features \
+        --target-dir="target"
+}
+
+package() {
+    # To bypass makepkg's dependency check during build-time
+    optdepends+=("$PACKAGE_NAME_STUB-db")
+
+    cd "$PROJECT_DIRECTORY"
+    install -Dm644 "LICENSE" "$pkgdir/usr/share/licenses/$PACKAGE_NAME_STUB/LICENSE"
+    install -Dm755 "target/release/$PACKAGE_NAME_STUB" "$pkgdir/usr/bin/$PACKAGE_NAME_STUB"
+    ln -s "/usr/bin/$PACKAGE_NAME_STUB" "$pkgdir/usr/bin/aldm"
+}
