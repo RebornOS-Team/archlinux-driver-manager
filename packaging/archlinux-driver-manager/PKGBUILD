@@ -41,7 +41,7 @@ build() {
 
 package() {
     # To bypass makepkg's dependency check during build-time
-    optdepends+=("$PACKAGE_NAME_STUB-db")
+    depends+=("$PACKAGE_NAME_STUB-db")
 
     cd "$PROJECT_DIRECTORY"
     install -Dm644 "LICENSE" "$pkgdir/usr/share/licenses/$PACKAGE_NAME_STUB/LICENSE"
