@@ -2,7 +2,7 @@
 
 # Maintainer: shivanandvp <shivanandvp@rebornos.org>
 
-pkgver=0.1.0
+pkgver=0.0.1
 pkgrel=1
 
 PACKAGE_NAME_STUB="archlinux-driver-manager"

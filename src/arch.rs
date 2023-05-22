@@ -71,12 +71,13 @@ impl PackageManager {
         }
 
         self.handle.trans_prepare().unwrap();
-        println!("Installing: {:#?}", actual_install_list);
-        println!("Removing: {:#?}", actual_remove_list);
+        println!("Packages to Install: {:?}", actual_install_list);
+        println!("Packages to Remove: {:?}", actual_remove_list);
+        println!("Please wait while packages are being installed...");
 
         self.handle.trans_commit().unwrap();
 
-        println!("Transaction completed...");
+        println!("Transaction completed.");
 
         Ok(())
     }
