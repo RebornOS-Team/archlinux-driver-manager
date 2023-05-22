@@ -1,11 +1,13 @@
 use crate::{
     cli::{CommandlinePrint, GenerateDatabaseActionArguments},
     data::{database, input_file},
-    error::Error,
+    error::{DatabaseSnafu, Error},
 };
 use owo_colors::{OwoColorize, Stream::Stdout};
+use rmp_serde;
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeSet, path::PathBuf};
+use snafu::ResultExt;
+use std::path::PathBuf;
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct GenerateDatabaseActionOutput {
@@ -45,102 +47,60 @@ impl CommandlinePrint for GenerateDatabaseActionOutput {
     }
 }
 
-fn convert_hardware_ids(
-    input_hardware_ids: Vec<input_file::HardwareIdEntry>,
-) -> BTreeSet<database::HardwareId> {
-    let mut btree_set = BTreeSet::<database::HardwareId>::new();
-    for input_hardware_id in input_hardware_ids {
-        match input_hardware_id {
-            input_file::HardwareIdEntry::Pci(pci_id_list) => {
-                let vendor = pci_id_list.vendor;
-                for device in pci_id_list.devices {
-                    btree_set.insert(database::HardwareId::Pci(
-                        (vendor.as_ref(), device.as_ref())
-                            .try_into()
-                            .unwrap_or_else(|error| {
-                                println!(
-                                    "{}({}:{})...{}",
-                                    "Error: Invalid PCI ID "
-                                        .if_supports_color(Stdout, |text| text.red()),
-                                    vendor.if_supports_color(Stdout, |text| text.bold()),
-                                    device.if_supports_color(Stdout, |text| text.bold()),
-                                    error
-                                );
-                                database::PciId {
-                                    vendor_id: 0x0000,
-                                    device_id: 0x0000,
-                                }
-                            }),
-                    ));
-                }
-            }
-            input_file::HardwareIdEntry::Usb(usb_id_list) => {
-                let vendor = usb_id_list.vendor;
-                for device in usb_id_list.devices {
-                    btree_set.insert(database::HardwareId::Usb(
-                        (vendor.as_ref(), device.as_ref())
-                            .try_into()
-                            .unwrap_or_else(|error| {
-                                println!(
-                                    "{}({}:{})...{}",
-                                    "Error: Invalid USB ID "
-                                        .if_supports_color(Stdout, |text| text.red()),
-                                    vendor.if_supports_color(Stdout, |text| text.bold()),
-                                    device.if_supports_color(Stdout, |text| text.bold()),
-                                    error
-                                );
-                                database::UsbId {
-                                    vendor_id: 0x0000,
-                                    device_id: 0x0000,
-                                }
-                            }),
-                    ));
-                }
-            }
-        }
-    }
-    btree_set
-}
-
 pub fn generate_database_inner(
     input_file: PathBuf,
     database_file: PathBuf,
 ) -> Result<GenerateDatabaseActionOutput, Error> {
     let input_driver_listing = input_file::parse_input_file(input_file)?;
-    let driver_database = database::DriverDatabase::create_with_database_path(database_file)?;
-    driver_database
-        .write(|hardware_listing| {
-            for driver_entry in input_driver_listing {
-                let driver_listing = hardware_listing
-                    .entry(driver_entry.hardware_kind.into())
-                    .or_default();
+    let driver_database = database::DriverDatabase::with_database_path(database_file)?;
 
-                let hardware_id_set = convert_hardware_ids(driver_entry.ids);
+    // open a writable transaction so we can make changes
+    let transaction = driver_database.tx(true).context(DatabaseSnafu)?;
 
-                let driver_records = driver_listing.entry(hardware_id_set).or_default();
+    let pci_ids_to_hardware_case_ids_bucket = transaction
+        .create_bucket("pci_ids_to_hardware_case_ids_bucket")
+        .context(DatabaseSnafu)?;
 
-                driver_records.insert(database::DriverRecord {
-                    order_of_priority: driver_entry.order_of_priority,
-                    name: driver_entry.name,
-                    description: driver_entry.description,
-                    tags: driver_entry
-                        .tags
-                        .iter()
-                        .map(database::convert_tag)
-                        .collect(),
-                    packages: driver_entry.packages,
-                    configurations: driver_entry
-                        .configurations
-                        .into_iter()
-                        .map(|item| item.into())
-                        .collect(),
-                    pre_install_script: driver_entry.pre_install.map(|item| item.into()),
-                    post_install_script: driver_entry.post_install.map(|item| item.into()),
-                });
+    let usb_ids_to_hardware_case_ids_bucket = transaction
+        .create_bucket("usb_ids_to_hardware_case_ids_bucket")
+        .context(DatabaseSnafu)?;
+
+    let hardware_case_ids_to_driver_options_bucket: jammdb::Bucket = transaction
+        .create_bucket("hardware_case_ids_to_driver_options")
+        .context(DatabaseSnafu)?;
+
+    for hardware_case in input_driver_listing {
+        hardware_case_ids_to_driver_options_bucket
+            .put(
+                hardware_case.id,
+                rmp_serde::to_vec(&hardware_case.driver_options).unwrap(),
+            )
+            .context(DatabaseSnafu)?;
+        for hardware_group in hardware_case.hardware_groups {
+            for device_entry in hardware_group.device_entries {
+                match device_entry {
+                    input_file::DeviceEntry::Pci(pci_id_list) => {
+                        for device in pci_id_list.devices {
+                            let hardware_id: u32 =
+                                ((pci_id_list.vendor as u32) << 16) | device as u32;
+                            pci_ids_to_hardware_case_ids_bucket
+                                .put(hardware_id.to_be_bytes(), hardware_case.id)
+                                .context(DatabaseSnafu)?;
+                        }
+                    }
+                    input_file::DeviceEntry::Usb(usb_id_list) => {
+                        for device in usb_id_list.devices {
+                            let hardware_id: u32 =
+                                ((usb_id_list.vendor as u32) << 16) | device as u32;
+                            usb_ids_to_hardware_case_ids_bucket
+                                .put(hardware_id.to_be_bytes(), hardware_case.id)
+                                .context(DatabaseSnafu)?;
+                        }
+                    }
+                }
             }
-        })
-        .unwrap();
-    driver_database.save().unwrap();
+        }
+    }
 
     Ok(GenerateDatabaseActionOutput::new())
 }
