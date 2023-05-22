@@ -8,3 +8,6 @@ packaging/**/src
 packaging/**/*.tar.*
 packaging/**/archlinux-driver-manager-git/archlinux-driver-manager
 packaging/**/archlinux-driver-manager/archlinux-driver-manager
+
+# IDE
+*.code-workspace
