@@ -173,26 +173,6 @@ fn all_driver_packages(
                 .collect(),
         ));
     }
-
-    // match optional_hardware {
-    //     Some(hardware) => driver_database
-    //         .read(|hardware_listing| {
-    //             if let Some(driver_listing) = hardware_listing.get(&hardware) {
-    //                 all_driver_packages
-    //                     .entry(hardware.to_owned())
-    //                     .or_default()
-    //                     .extend(driver_listing.all_package_names(filter_tags));
-    //             }
-    //         })
-    //         .context(DatabaseSnafu {})?,
-    //     None => driver_database
-    //         .read(|hardware_listing| {
-    //             all_driver_packages.extend(hardware_listing.all_packages(filter_tags));
-    //         })
-    //         .context(DatabaseSnafu {})?,
-    // }
-
-    // Ok(all_driver_packages)
 }
 
 fn installed_drivers(
