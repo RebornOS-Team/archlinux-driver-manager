@@ -1,5 +1,5 @@
 use crate::arch::PackageManager;
-use crate::data::HardwareKind;
+use crate::data::input_file::{DriverOption, HardwareKind};
 use crate::{
     cli::{CommandlinePrint, ListActionArguments},
     data::database::DriverDatabase,
@@ -8,21 +8,21 @@ use crate::{
 use owo_colors::{OwoColorize, Stream::Stdout};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::fmt::Display;
 use std::path::PathBuf;
 use std::{
-    collections::HashMap,
+    collections::BTreeMap,
     ops::{Deref, DerefMut},
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct ListActionOutput {
-    inner: HashMap<HardwareKind, HashSet<InstalledPackage>>,
+    inner: BTreeMap<HardwareKind, BTreeSet<InstalledPackage>>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct InstalledPackage {
     pub name: String,
     pub version: String,
@@ -31,13 +31,13 @@ pub struct InstalledPackage {
 impl ListActionOutput {
     pub fn new() -> Self {
         ListActionOutput {
-            inner: HashMap::<HardwareKind, HashSet<InstalledPackage>>::new(),
+            inner: BTreeMap::<HardwareKind, BTreeSet<InstalledPackage>>::new(),
         }
     }
 }
 
 impl Deref for ListActionOutput {
-    type Target = HashMap<HardwareKind, HashSet<InstalledPackage>>;
+    type Target = BTreeMap<HardwareKind, BTreeSet<InstalledPackage>>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -104,34 +104,102 @@ fn all_driver_packages(
     optional_hardware: Option<HardwareKind>,
     filter_tags: &BTreeSet<String>,
     driver_database: &DriverDatabase,
-) -> Result<HashMap<HardwareKind, HashSet<String>>, Error> {
-    let mut all_driver_packages = HashMap::<HardwareKind, HashSet<String>>::new();
-    match optional_hardware {
-        Some(hardware) => driver_database
-            .read(|hardware_listing| {
-                if let Some(driver_listing) = hardware_listing.get(&hardware) {
-                    all_driver_packages
-                        .entry(hardware.to_owned())
-                        .or_default()
-                        .extend(driver_listing.all_package_names(filter_tags));
+) -> Result<BTreeMap<HardwareKind, BTreeSet<String>>, Error> {
+    let mut all_driver_packages = BTreeMap::<HardwareKind, BTreeSet<String>>::new();
+
+    // Open a read-only transaction to get the data
+    let transaction = driver_database.tx(false).context(DatabaseSnafu {})?;
+
+    let hardware_kind_to_driver_option_id_bucket = transaction
+        .get_bucket("hardware_kind_to_driver_option_id_bucket")
+        .context(DatabaseSnafu)?;
+
+    let driver_option_id_to_driver_option_bucket = transaction
+        .get_bucket("driver_option_id_to_driver_option_bucket")
+        .context(DatabaseSnafu)?;
+
+    let process_hardware_kind = |hardware_kinds: BTreeSet<HardwareKind>| {
+        hardware_kinds.iter().fold(
+            BTreeMap::<HardwareKind, BTreeSet<String>>::new(),
+            |grouped_packages: BTreeMap<HardwareKind, BTreeSet<String>>,
+             hardware_kind: &HardwareKind| {
+                if let Some(data) =
+                    hardware_kind_to_driver_option_id_bucket.get(hardware_kind.to_string())
+                {
+                    let driver_option_ids: BTreeSet<String> =
+                        rmp_serde::from_slice(data.kv().value()).unwrap();
+                    driver_option_ids
+                        .iter()
+                        .filter_map(|driver_option_id| {
+                            if let Some(driver_option_data) =
+                                driver_option_id_to_driver_option_bucket.get(driver_option_id)
+                            {
+                                rmp_serde::from_slice(driver_option_data.kv().value()).ok()
+                            } else {
+                                None
+                            }
+                        })
+                        .fold(
+                            grouped_packages,
+                            |mut inner_grouped_packages, driver_option: DriverOption| {
+                                if filter_tags
+                                    .into_iter()
+                                    .all(|tag| driver_option.tags.contains(tag))
+                                {
+                                    inner_grouped_packages
+                                        .entry(*hardware_kind)
+                                        .or_default()
+                                        .extend(driver_option.packages.into_iter());
+                                }
+                                inner_grouped_packages
+                            },
+                        )
+                } else {
+                    BTreeMap::<HardwareKind, BTreeSet<String>>::new()
                 }
-            })
-            .context(DatabaseSnafu {})?,
-        None => driver_database
-            .read(|hardware_listing| {
-                all_driver_packages.extend(hardware_listing.all_packages(filter_tags));
-            })
-            .context(DatabaseSnafu {})?,
+            },
+        )
+    };
+
+    if let Some(hardware_kind) = optional_hardware {
+        return Ok(process_hardware_kind(
+            vec![hardware_kind].into_iter().collect(),
+        ));
+    } else {
+        return Ok(process_hardware_kind(
+            hardware_kind_to_driver_option_id_bucket
+                .kv_pairs()
+                .filter_map(|data| rmp_serde::from_slice(data.value()).ok())
+                .collect(),
+        ));
     }
 
-    Ok(all_driver_packages)
+    // match optional_hardware {
+    //     Some(hardware) => driver_database
+    //         .read(|hardware_listing| {
+    //             if let Some(driver_listing) = hardware_listing.get(&hardware) {
+    //                 all_driver_packages
+    //                     .entry(hardware.to_owned())
+    //                     .or_default()
+    //                     .extend(driver_listing.all_package_names(filter_tags));
+    //             }
+    //         })
+    //         .context(DatabaseSnafu {})?,
+    //     None => driver_database
+    //         .read(|hardware_listing| {
+    //             all_driver_packages.extend(hardware_listing.all_packages(filter_tags));
+    //         })
+    //         .context(DatabaseSnafu {})?,
+    // }
+
+    // Ok(all_driver_packages)
 }
 
 fn installed_drivers(
-    all_driver_packages: HashMap<HardwareKind, HashSet<String>>,
+    all_driver_packages: BTreeMap<HardwareKind, BTreeSet<String>>,
     package_manager: &PackageManager,
-) -> HashMap<HardwareKind, HashSet<InstalledPackage>> {
-    let mut installed_drivers = HashMap::<HardwareKind, HashSet<InstalledPackage>>::new();
+) -> BTreeMap<HardwareKind, BTreeSet<InstalledPackage>> {
+    let mut installed_drivers = BTreeMap::<HardwareKind, BTreeSet<InstalledPackage>>::new();
     for (hardware_kind, package_names) in all_driver_packages {
         installed_drivers.entry(hardware_kind).or_default().extend(
             package_names.iter().filter_map(|package_name| {
@@ -151,11 +219,10 @@ pub fn list_inner<T: IntoIterator<Item = String>>(
     database_filepath: PathBuf,
     optional_hardware: Option<HardwareKind>,
     tags: T,
-) -> Result<HashMap<HardwareKind, HashSet<InstalledPackage>>, Error> {
+) -> Result<BTreeMap<HardwareKind, BTreeSet<InstalledPackage>>, Error> {
     let driver_database = DriverDatabase::with_database_path(database_filepath)?;
     let package_manager = PackageManager::new();
 
-    driver_database.load().context(DatabaseSnafu {})?;
     let all_driver_packages = all_driver_packages(
         optional_hardware,
         &tags.into_iter().collect(),

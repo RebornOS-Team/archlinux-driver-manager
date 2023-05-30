@@ -76,6 +76,10 @@ pub fn generate_database_inner(
         .create_bucket("hardware_kind_to_hardware_setup_id_bucket")
         .context(DatabaseSnafu)?;
 
+    let hardware_kind_to_driver_option_id_bucket = transaction
+        .create_bucket("hardware_kind_to_driver_option_id_bucket")
+        .context(DatabaseSnafu)?;
+
     let hardware_setup_id_to_driver_option_id_bucket = transaction
         .create_bucket("hardware_setup_id_to_driver_option_id_bucket")
         .context(DatabaseSnafu)?;
@@ -179,6 +183,24 @@ pub fn generate_database_inner(
             .iter()
             .for_each(|driver_option| {
                 let driver_option_id = new_driver_option_id();
+
+                {
+                    let mut driver_option_ids = BTreeSet::<String>::new();
+                    if let Some(data) = hardware_kind_to_driver_option_id_bucket
+                        .get(hardware_setup.hardware_kind.to_string())
+                    {
+                        if data.is_kv() {
+                            let kv = data.kv();
+                            driver_option_ids = rmp_serde::from_slice(kv.value()).unwrap();
+                        }
+                    }
+                    driver_option_ids.insert(driver_option_id);
+                    hardware_kind_to_driver_option_id_bucket.put(
+                        hardware_setup.hardware_kind.to_string(),
+                        rmp_serde::to_vec(&driver_option_ids).unwrap(),
+                    );
+                }
+
                 driver_option_ids.insert(driver_option_id);
                 driver_option_id_to_driver_option_bucket
                     .put(driver_option_id, rmp_serde::to_vec(driver_option).unwrap());
