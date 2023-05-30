@@ -27,7 +27,7 @@ pub struct HardwareSetup {
 }
 
 impl HardwareSetup {
-    fn matching_driver_options<T: IntoIterator<Item = String>>(
+    pub fn matching_driver_options<T: IntoIterator<Item = String>>(
         &self,
         hardware_ids: BTreeSet<HardwareId>,
         optional_hardware: Option<HardwareKind>,
@@ -155,7 +155,7 @@ pub enum HardwareList {
 }
 
 impl HardwareList {
-    fn matches_with_hardware_ids(&self, hardware_ids: BTreeSet<HardwareId>) -> bool {
+    pub fn matches_with_hardware_ids(&self, hardware_ids: BTreeSet<HardwareId>) -> bool {
         return match self {
             HardwareList::Each(hardware_lists_inner) => {
                 hardware_lists_inner.into_iter().all(|hardware_list_inner| {
