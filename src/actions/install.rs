@@ -3,7 +3,7 @@ use crate::{
     actions::search::search_inner,
     arch::PackageManager,
     cli::{CommandlinePrint, InstallActionArguments},
-    data::database::{DriverRecord, HardwareKind},
+    data::input_file::{DriverOption, HardwareKind},
     error::Error,
 };
 use serde::{Deserialize, Serialize};
@@ -23,15 +23,15 @@ impl CommandlinePrint for InstallActionOutput {
     fn print_debug(&self) {}
 }
 
-pub fn install_inner<T: IntoIterator<Item = String>>(
+pub fn install_inner<T: Iterator<Item = String>>(
     database_filepath: PathBuf,
     hardware: HardwareKind,
     tags: T,
     _enable_aur: bool,
 ) -> Result<InstallActionOutput, Error> {
-    let relevant_driver_records = search_inner(database_filepath.clone(), Some(hardware), tags)?
+    let relevant_driver_records = search_inner(database_filepath.clone(), Some(&hardware), tags)?
         .into_values()
-        .collect::<Vec<BTreeSet<DriverRecord>>>()
+        .collect::<Vec<BTreeSet<DriverOption>>>()
         .pop()
         .unwrap();
 
@@ -41,7 +41,7 @@ pub fn install_inner<T: IntoIterator<Item = String>>(
         .expect("Error: Nothing to install")
         .packages
         .clone();
-    let packages_to_remove = list_inner(database_filepath.clone(), Some(hardware), None).map_or(
+    let packages_to_remove = list_inner(database_filepath.clone(), Some(&hardware), None).map_or(
         Vec::<String>::new(),
         |installed_hash_map| {
             installed_hash_map.into_iter().fold(
@@ -74,7 +74,7 @@ pub fn install(
     Ok(install_inner(
         install_action_arguments.database_file,
         install_action_arguments.hardware,
-        install_action_arguments.tags,
+        install_action_arguments.tags.into_iter(),
         install_action_arguments.enable_aur,
     )?)
 }

@@ -129,7 +129,7 @@ pub fn generate_database_inner(
 
         hardware_setup_id = new_hardware_setup_id();
         hardware_setup_id_to_hardware_setup_bucket.put(
-            hardware_setup_id,
+            hardware_setup_id.clone(),
             rmp_serde::to_vec(hardware_setup).unwrap(),
         );
 
@@ -137,13 +137,13 @@ pub fn generate_database_inner(
             pci_id_list.devices.iter().for_each(|device| {
                 let pci_id = (((pci_id_list.vendor as u32) << 16) | (*device as u32)).to_string();
                 let mut hardware_setup_ids = BTreeSet::<String>::new();
-                if let Some(data) = pci_id_to_hardware_setup_id_bucket.get(pci_id) {
+                if let Some(data) = pci_id_to_hardware_setup_id_bucket.get(&pci_id) {
                     if data.is_kv() {
                         let kv = data.kv();
                         hardware_setup_ids = rmp_serde::from_slice(kv.value()).unwrap();
                     }
                 }
-                hardware_setup_ids.insert(hardware_setup_id);
+                hardware_setup_ids.insert(hardware_setup_id.clone());
                 pci_id_to_hardware_setup_id_bucket
                     .put(pci_id, rmp_serde::to_vec(&hardware_setup_ids).unwrap());
             })
@@ -153,19 +153,19 @@ pub fn generate_database_inner(
             usb_id_list.devices.iter().for_each(|device| {
                 let usb_id = (((usb_id_list.vendor as u32) << 16) | (*device as u32)).to_string();
                 let mut hardware_setup_ids = BTreeSet::<String>::new();
-                if let Some(data) = pci_id_to_hardware_setup_id_bucket.get(usb_id) {
+                if let Some(data) = usb_id_to_hardware_setup_id_bucket.get(&usb_id) {
                     if data.is_kv() {
                         let kv = data.kv();
                         hardware_setup_ids = rmp_serde::from_slice(kv.value()).unwrap();
                     }
                 }
-                hardware_setup_ids.insert(hardware_setup_id);
-                pci_id_to_hardware_setup_id_bucket
+                hardware_setup_ids.insert(hardware_setup_id.clone());
+                usb_id_to_hardware_setup_id_bucket
                     .put(usb_id, rmp_serde::to_vec(&hardware_setup_ids).unwrap());
             })
         };
 
-        match hardware_setup.hardware_list {
+        match &hardware_setup.hardware_list {
             HardwareList::Each(hardware_lists) => {
                 hardware_lists
                     .iter()
@@ -194,14 +194,14 @@ pub fn generate_database_inner(
                             driver_option_ids = rmp_serde::from_slice(kv.value()).unwrap();
                         }
                     }
-                    driver_option_ids.insert(driver_option_id);
+                    driver_option_ids.insert(driver_option_id.clone());
                     hardware_kind_to_driver_option_id_bucket.put(
                         hardware_setup.hardware_kind.to_string(),
                         rmp_serde::to_vec(&driver_option_ids).unwrap(),
                     );
                 }
 
-                driver_option_ids.insert(driver_option_id);
+                driver_option_ids.insert(driver_option_id.clone());
                 driver_option_id_to_driver_option_bucket
                     .put(driver_option_id, rmp_serde::to_vec(driver_option).unwrap());
             });

@@ -27,14 +27,14 @@ pub struct HardwareSetup {
 }
 
 impl HardwareSetup {
-    pub fn matching_driver_options<T: IntoIterator<Item = String>>(
+    pub fn matching_driver_options<T: Iterator<Item = String>>(
         &self,
         hardware_ids: BTreeSet<HardwareId>,
-        optional_hardware: Option<HardwareKind>,
+        optional_hardware: Option<&HardwareKind>,
         tags: &T,
     ) -> Option<BTreeSet<&DriverOption>> {
         if let Some(hardwareKind) = optional_hardware {
-            if self.hardware_kind != hardwareKind {
+            if &self.hardware_kind != hardwareKind {
                 return None;
             }
         }
@@ -44,10 +44,7 @@ impl HardwareSetup {
         return Some(
             self.driver_options
                 .iter()
-                .filter(|driver_option| {
-                    tags.into_iter()
-                        .all(|tag| driver_option.tags.contains(&tag))
-                })
+                .filter(|driver_option| tags.all(|tag| driver_option.tags.contains(&tag)))
                 .collect(),
         );
     }

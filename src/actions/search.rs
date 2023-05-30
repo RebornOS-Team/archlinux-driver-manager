@@ -136,9 +136,9 @@ fn hardware_ids_present() -> BTreeSet<HardwareId> {
         .collect()
 }
 
-pub fn search_inner<T: IntoIterator<Item = String>>(
+pub fn search_inner<T: Iterator<Item = String>>(
     database_filepath: PathBuf,
-    optional_hardware: Option<HardwareKind>,
+    optional_hardware: Option<&HardwareKind>,
     tags: T,
 ) -> Result<BTreeMap<HardwareKind, BTreeSet<DriverOption>>, Error> {
     let driver_database = DriverDatabase::with_database_path(database_filepath)?;
@@ -222,8 +222,8 @@ pub fn search(search_action_arguments: SearchActionArguments) -> Result<SearchAc
     Ok(SearchActionOutput {
         inner: search_inner(
             search_action_arguments.database_file,
-            search_action_arguments.hardware,
-            search_action_arguments.tags,
+            search_action_arguments.hardware.as_ref(),
+            search_action_arguments.tags.into_iter(),
         )?,
     })
 }
