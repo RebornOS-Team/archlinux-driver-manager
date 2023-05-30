@@ -1,7 +1,8 @@
 use crate::arch::PackageManager;
+use crate::data::HardwareKind;
 use crate::{
     cli::{CommandlinePrint, ListActionArguments},
-    data::database::{DriverDatabase, HardwareKind},
+    data::database::DriverDatabase,
     error::{DatabaseSnafu, Error},
 };
 use owo_colors::{OwoColorize, Stream::Stdout};

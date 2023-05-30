@@ -2,38 +2,38 @@ use crate::{
     cli::{CommandlinePrint, SearchActionArguments},
     data::database::DriverDatabase,
     data::{
-        database::{HardwareId, PciId, UsbId},
-        input_file::{DriverOption, HardwareSetup, HardwareKind},
+        database::{HardwareId, PciId, UsbId}, input_file::DriverOption,
     },
     error::{DatabaseSnafu, Error},
 };
+use crate::data::input_file::HardwareKind;
 use devices;
 use owo_colors::{OwoColorize, Stream::Stdout};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
-use std::{collections::BTreeSet, fmt::Display};
 use std::{
-    collections::HashMap,
+    collections::{BTreeSet, BTreeMap}, 
     ops::{Deref, DerefMut},
+    fmt::Display,    
     path::PathBuf,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct SearchActionOutput {
-    inner: HashMap<HardwareKind, BTreeSet<DriverOption>>,
+    inner: BTreeMap<HardwareKind, BTreeSet<DriverOption>>,
 }
 
 impl SearchActionOutput {
     pub fn new() -> Self {
         SearchActionOutput {
-            inner: HashMap::<HardwareKind, BTreeSet<DriverOption>>::new(),
+            inner: BTreeMap::<HardwareKind, BTreeSet<DriverOption>>::new(),
         }
     }
 }
 
 impl Deref for SearchActionOutput {
-    type Target = HashMap<HardwareKind, BTreeSet<DriverOption>>;
+    type Target = BTreeMap<HardwareKind, BTreeSet<DriverOption>>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -151,7 +151,7 @@ pub fn search_inner<T: IntoIterator<Item = String>>(
     database_filepath: PathBuf,
     optional_hardware: Option<HardwareKind>,
     tags: T,
-) -> Result<HashMap<HardwareKind, BTreeSet<DriverOption>>, Error> {
+) -> Result<BTreeMap<HardwareKind, BTreeSet<DriverOption>>, Error> {
     let driver_database = DriverDatabase::with_database_path(database_filepath)?;
 
     // Open a read-only transaction to get the data
@@ -161,16 +161,12 @@ pub fn search_inner<T: IntoIterator<Item = String>>(
 
     let filter_tags: BTreeSet<String> = tags.into_iter().collect();
 
-    let pci_ids_to_hardware_case_ids_bucket = transaction
-        .get_bucket("pci_ids_to_hardware_case_ids_bucket")
+    let hardware_kind_to_hardware_setup_id_bucket = transaction
+        .get_bucket("hardware_kind_to_hardware_setup_id_bucket")
         .context(DatabaseSnafu)?;
 
-    let usb_ids_to_hardware_case_ids_bucket = transaction
-        .get_bucket("usb_ids_to_hardware_case_ids_bucket")
-        .context(DatabaseSnafu)?;
-
-    let hardware_case_ids_to_driver_options_bucket: jammdb::Bucket = transaction
-        .get_bucket("hardware_case_ids_to_driver_options")
+    let hardware_setup_id_to_hardware_setup_bucket = transaction
+        .get_bucket("hardware_setup_id_to_hardware_setup_bucket")
         .context(DatabaseSnafu)?;
 
     let mut relevant_hardware_case_ids = BTreeSet::<String>::new();
@@ -192,7 +188,7 @@ pub fn search_inner<T: IntoIterator<Item = String>>(
         }
     }
 
-    let mut relevant_driver_options = HashMap::<HardwareKind, BTreeSet<DriverOption>>::new();
+    let mut relevant_driver_options = BTreeMap::<HardwareKind, BTreeSet<DriverOption>>::new();
 
     for relevant_hardware_case_id in relevant_hardware_case_ids {
         if let Some(data) =

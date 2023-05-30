@@ -68,14 +68,6 @@ impl DerefMut for DriverDatabase {
     }
 }
 
-impl From<PciId> for u32 {
-    fn from(pci_id: PciId) -> Self {
-        ((pci_id.vendor as u32) << 16) | pci_id.device as u32
-    }
-}
-
-impl From<UsbId> for u32 {
-    fn from(usb_id: UsbId) -> Self {
-        ((usb_id.vendor as u32) << 16) | usb_id.device as u32
-    }
+pub fn convert_tag<S: AsRef<str>>(tag: S) -> String {
+    tag.as_ref().trim().replace("-", " ").replace("_", " ")
 }

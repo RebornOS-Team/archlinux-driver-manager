@@ -157,8 +157,9 @@ impl CommandlineInterface {
 }
 
 pub mod commandline_interface_template {
+    use crate::data::input_file::HardwareKind;
+
     use super::CommandlineFlags;
-    use crate::data::database::HardwareKind;
     use clap::{Args, Parser, Subcommand};
     use std::path::PathBuf;
 

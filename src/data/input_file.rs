@@ -1,9 +1,14 @@
+use crate::error::Error;
+use crate::error::InputFileParseSnafu;
 use core::fmt;
-use std::{collections::BTreeSet, fs::File, path::PathBuf};
-
-use crate::error::{Error, InputFileParseSnafu};
 use serde::{Deserialize, Deserializer, Serialize};
 use snafu::ResultExt;
+use std::str::FromStr;
+use std::{collections::BTreeSet, fs::File, path::PathBuf};
+
+use super::database::HardwareId;
+use super::database::PciId;
+use super::database::UsbId;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 /// Represents a particular type of hardware setup, like Intel+Nvidia Hybrid Graphics, or Nvidia Discrete Graphics, Intel+AMD Hybrid Graphics, etc.
@@ -21,19 +26,108 @@ pub struct HardwareSetup {
     pub driver_options: BTreeSet<DriverOption>,
 }
 
+impl HardwareSetup {
+    fn matching_driver_options<T: IntoIterator<Item = String>>(
+        &self,
+        hardware_ids: BTreeSet<HardwareId>,
+        optional_hardware: Option<HardwareKind>,
+        tags: &T,
+    ) -> Option<BTreeSet<&DriverOption>> {
+        if let Some(hardwareKind) = optional_hardware {
+            if self.hardware_kind != hardwareKind {
+                return None;
+            }
+        }
+        if !self.hardware_list.matches_with_hardware_ids(hardware_ids) {
+            return None;
+        }
+        return Some(
+            self.driver_options
+                .iter()
+                .filter(|driver_option| {
+                    tags.into_iter()
+                        .all(|tag| driver_option.tags.contains(&tag))
+                })
+                .collect(),
+        );
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum HardwareKind {
-    #[serde(alias = "GRAPHICS", alias = "graphics", alias = "GPU", alias = "gpu")]
+    #[serde(
+        alias = "graphics",
+        alias = "Graphics",
+        alias = "GRAPHICS",
+        alias = "gpu",
+        alias = "Gpu",
+        alias = "GPU"
+    )]
     Graphics,
 
-    #[serde(alias = "ETHERNET", alias = "ethernet")]
+    #[serde(
+        alias = "ethernet",
+        alias = "Ethernet",
+        alias = "ETHERNET",
+        alias = "lan",
+        alias = "Lan",
+        alias = "LAN"
+    )]
     Ethernet,
 
-    #[serde(alias = "WIRELESS", alias = "wireless")]
+    #[serde(
+        alias = "wireless",
+        alias = "Wireless",
+        alias = "WIRELESS",
+        alias = "wifi",
+        alias = "Wifi",
+        alias = "WiFi",
+        alias = "WIFI"
+    )]
     Wireless,
 
-    #[serde(alias = "SOUND", alias = "sound", alias = "AUDIO", alias = "audio")]
+    #[serde(
+        alias = "sound",
+        alias = "Sound",
+        alias = "SOUND",
+        alias = "audio",
+        alias = "Audio",
+        alias = "AUDIO"
+    )]
     Audio,
+}
+
+impl FromStr for HardwareKind {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let user_string = String::from(s).to_lowercase();
+        match user_string.as_str() {
+            "graphics" | "Graphics" | "GRAPHICS" | "gpu" | "Gpu" | "GPU" => {
+                Ok(HardwareKind::Graphics)
+            }
+            "ethernet" | "Ethernet" | "ETHERNET" | "lan" | "Lan" | "LAN" => {
+                Ok(HardwareKind::Ethernet)
+            }
+            "wireless" | "Wireless" | "WIRELESS" | "wifi" | "Wifi" | "WiFi" | "WIFI" => {
+                Ok(HardwareKind::Wireless)
+            }
+            "sound" | "Sound" | "SOUND" | "audio" | "Audio" | "AUDIO" => Ok(HardwareKind::Audio),
+            _ => Err(Error::InvalidEnumValue {
+                value: s.into(),
+                enum_name: "HardwareKind".into(),
+                allowed_values: vec![
+                    "graphics", "Graphics", "GRAPHICS", "gpu", "Gpu", "GPU", "ethernet",
+                    "Ethernet", "ETHERNET", "lan", "Lan", "LAN", "wireless", "Wireless",
+                    "WIRELESS", "wifi", "Wifi", "WiFi", "WIFI", "sound", "Sound", "SOUND", "audio",
+                    "Audio", "AUDIO",
+                ]
+                .into_iter()
+                .map(|s| String::from(s))
+                .collect(),
+            }),
+        }
+    }
 }
 
 impl fmt::Display for HardwareKind {
@@ -58,6 +152,47 @@ pub enum HardwareList {
 
     #[serde(alias = "USB", alias = "usb")]
     Usb(UsbIdList),
+}
+
+impl HardwareList {
+    fn matches_with_hardware_ids(&self, hardware_ids: BTreeSet<HardwareId>) -> bool {
+        return match self {
+            HardwareList::Each(hardware_lists_inner) => {
+                hardware_lists_inner.into_iter().all(|hardware_list_inner| {
+                    return match hardware_list_inner {
+                        HardwareListInner::Pci(pci_id_list) => {
+                            pci_id_list.devices.iter().any(|device| {
+                                hardware_ids.contains(&HardwareId::Pci(PciId {
+                                    vendor: pci_id_list.vendor,
+                                    device: *device,
+                                }))
+                            })
+                        }
+                        HardwareListInner::Usb(usb_id_list) => {
+                            usb_id_list.devices.iter().any(|device| {
+                                hardware_ids.contains(&HardwareId::Usb(UsbId {
+                                    vendor: usb_id_list.vendor,
+                                    device: *device,
+                                }))
+                            })
+                        }
+                    };
+                })
+            }
+            HardwareList::Pci(pci_id_list) => pci_id_list.devices.iter().any(|device| {
+                hardware_ids.contains(&HardwareId::Pci(PciId {
+                    vendor: pci_id_list.vendor,
+                    device: *device,
+                }))
+            }),
+            HardwareList::Usb(usb_id_list) => usb_id_list.devices.iter().any(|device| {
+                hardware_ids.contains(&HardwareId::Usb(UsbId {
+                    vendor: usb_id_list.vendor,
+                    device: *device,
+                }))
+            }),
+        };
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -102,7 +237,7 @@ where
     D: Deserializer<'de>,
 {
     let s: BTreeSet<&str> = Deserialize::deserialize(deserializer)?;
-    s.iter()
+    s.into_iter()
         .map(|item| u16::from_str_radix(&item, 16).map_err(serde::de::Error::custom))
         .collect()
 }
