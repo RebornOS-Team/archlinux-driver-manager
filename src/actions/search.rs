@@ -3,7 +3,7 @@ use crate::{
     data::database::DriverDatabase,
     data::{
         database::{HardwareId, PciId, UsbId},
-        input_file::{DriverOption, HardwareCase, HardwareKind},
+        input_file::{DriverOption, HardwareSetup, HardwareKind},
     },
     error::{DatabaseSnafu, Error},
 };
