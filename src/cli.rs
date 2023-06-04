@@ -259,6 +259,7 @@ pub mod commandline_interface_template {
 
         #[clap(
             long = "tag",
+            alias = "tags",
             short = 't',
             help = "Tags to filter drivers.",
             display_order = 12
@@ -285,6 +286,7 @@ pub mod commandline_interface_template {
 
         #[clap(
             long = "tag",
+            alias = "tags",
             short = 't',
             help = "Tags to filter drivers.",
             display_order = 22
@@ -311,6 +313,7 @@ pub mod commandline_interface_template {
 
         #[clap(
             long = "tag",
+            alias = "tags",
             short = 't',
             help = "Tags to filter drivers.",
             display_order = 32

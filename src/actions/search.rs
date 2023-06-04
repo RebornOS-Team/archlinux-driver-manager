@@ -181,7 +181,7 @@ pub fn search_inner<T: Iterator<Item = String>>(
                         if let Some(more_driver_options) = hardware_setup.matching_driver_options(
                             &hardware_ids_present,
                             &optional_hardware,
-                            filter_tags.iter(),
+                            &filter_tags,
                         ) {
                             grouped_driver_options
                                 .entry(hardware_setup.hardware_kind.clone())
@@ -204,7 +204,7 @@ pub fn search_inner<T: Iterator<Item = String>>(
                     if let Some(more_driver_options) = hardware_setup.matching_driver_options(
                         &hardware_ids_present,
                         &optional_hardware,
-                        filter_tags.iter(),
+                        &filter_tags,
                     ) {
                         grouped_driver_options
                             .entry(hardware_setup.hardware_kind.clone())
