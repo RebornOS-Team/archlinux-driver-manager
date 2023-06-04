@@ -199,7 +199,7 @@ pub fn list_inner<T: IntoIterator<Item = String>>(
     optional_hardware: &Option<HardwareKind>,
     tags: T,
 ) -> Result<BTreeMap<HardwareKind, BTreeSet<InstalledPackage>>, Error> {
-    let driver_database = DriverDatabase::with_database_path(database_filepath)?;
+    let driver_database = DriverDatabase::cloned_from_database_path(database_filepath)?;
     let package_manager = PackageManager::new();
 
     let all_driver_packages = all_driver_packages(

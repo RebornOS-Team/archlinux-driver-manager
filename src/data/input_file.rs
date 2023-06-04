@@ -236,7 +236,7 @@ fn from_hex_list<'de, D>(deserializer: D) -> Result<BTreeSet<u16>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    let s: BTreeSet<&str> = Deserialize::deserialize(deserializer)?;
+    let s: BTreeSet<String> = Deserialize::deserialize(deserializer)?;
     s.into_iter()
         .map(|item| u16::from_str_radix(&item, 16).map_err(serde::de::Error::custom))
         .collect()
@@ -246,7 +246,7 @@ fn from_hex<'de, D>(deserializer: D) -> Result<u16, D::Error>
 where
     D: Deserializer<'de>,
 {
-    let s: &str = Deserialize::deserialize(deserializer)?;
+    let s: String = Deserialize::deserialize(deserializer)?;
     u16::from_str_radix(&s, 16).map_err(serde::de::Error::custom)
 }
 

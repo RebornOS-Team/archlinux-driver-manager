@@ -141,7 +141,7 @@ pub fn search_inner<T: Iterator<Item = String>>(
     optional_hardware: &Option<HardwareKind>,
     tags: T,
 ) -> Result<BTreeMap<HardwareKind, BTreeSet<DriverOption>>, Error> {
-    let driver_database = DriverDatabase::with_database_path(database_filepath)?;
+    let driver_database = DriverDatabase::cloned_from_database_path(database_filepath)?;
 
     // Open a read-only transaction to get the data
     let transaction = driver_database.tx(false).context(DatabaseSnafu {})?;

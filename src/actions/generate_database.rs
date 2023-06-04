@@ -65,31 +65,31 @@ pub fn generate_database_inner(
     let transaction = driver_database.tx(true).context(DatabaseSnafu)?;
 
     let pci_id_to_hardware_setup_id_bucket = transaction
-        .create_bucket("pci_id_to_hardware_setup_id_bucket")
+        .get_or_create_bucket("pci_id_to_hardware_setup_id_bucket")
         .context(DatabaseSnafu)?;
 
     let usb_id_to_hardware_setup_id_bucket = transaction
-        .create_bucket("usb_id_to_hardware_setup_id_bucket")
+        .get_or_create_bucket("usb_id_to_hardware_setup_id_bucket")
         .context(DatabaseSnafu)?;
 
     let hardware_kind_to_hardware_setup_id_bucket = transaction
-        .create_bucket("hardware_kind_to_hardware_setup_id_bucket")
+        .get_or_create_bucket("hardware_kind_to_hardware_setup_id_bucket")
         .context(DatabaseSnafu)?;
 
     let hardware_kind_to_driver_option_id_bucket = transaction
-        .create_bucket("hardware_kind_to_driver_option_id_bucket")
+        .get_or_create_bucket("hardware_kind_to_driver_option_id_bucket")
         .context(DatabaseSnafu)?;
 
     let hardware_setup_id_to_driver_option_id_bucket = transaction
-        .create_bucket("hardware_setup_id_to_driver_option_id_bucket")
+        .get_or_create_bucket("hardware_setup_id_to_driver_option_id_bucket")
         .context(DatabaseSnafu)?;
 
     let hardware_setup_id_to_hardware_setup_bucket = transaction
-        .create_bucket("hardware_setup_id_to_hardware_setup_bucket")
+        .get_or_create_bucket("hardware_setup_id_to_hardware_setup_bucket")
         .context(DatabaseSnafu)?;
 
     let driver_option_id_to_driver_option_bucket = transaction
-        .create_bucket("driver_option_id_to_driver_option_bucket")
+        .get_or_create_bucket("driver_option_id_to_driver_option_bucket")
         .context(DatabaseSnafu)?;
 
     static HARDWARE_SETUP_SERIAL: AtomicUsize = AtomicUsize::new(1);
@@ -229,6 +229,8 @@ pub fn generate_database_inner(
             .context(DatabaseSnafu)
             .unwrap();
     });
+
+    transaction.commit().context(DatabaseSnafu)?;
 
     Ok(GenerateDatabaseActionOutput::new())
 }

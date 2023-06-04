@@ -1,9 +1,13 @@
-use crate::error::{DatabaseSnafu, Error};
+use crate::{
+    error::{DatabaseSnafu, Error},
+    DB_PATH_TEMP,
+};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
 use std::{
+    fs,
     ops::{Deref, DerefMut},
-    path::PathBuf,
+    path::{self, PathBuf},
 };
 
 #[derive(Clone)]
@@ -40,17 +44,30 @@ pub struct UsbId {
 
 impl DriverDatabase {
     pub fn with_database_path(filepath: PathBuf) -> Result<Self, Error> {
-        let mut temp_database_file = tempfile::NamedTempFile::new().expect(
-            "Could not create a temporary file with write permissions to create a database.",
-        );
-        std::io::copy(
-            &mut std::fs::File::open(filepath).expect("Could not open the database file."),
-            &mut temp_database_file,
-        )
-        .unwrap();
         Ok(DriverDatabase {
-            db: jammdb::DB::open(temp_database_file.into_temp_path()).context(DatabaseSnafu {})?,
+            db: { jammdb::DB::open(filepath).context(DatabaseSnafu)? },
         })
+    }
+
+    pub fn cloned_from_database_path(filepath: PathBuf) -> Result<Self, Error> {
+        let temp_db_path = path::PathBuf::from(*DB_PATH_TEMP);
+        std::fs::create_dir_all(temp_db_path.parent().unwrap()).unwrap();
+        _ = std::fs::remove_file(&temp_db_path).ok();
+        if filepath.exists() {
+            std::io::copy(
+                &mut std::fs::File::open(&filepath).expect("Could not open the database file."),
+                &mut fs::OpenOptions::new()
+                    .write(true)
+                    .create(true)
+                    .open(&temp_db_path)
+                    .unwrap(),
+            )
+            .unwrap();
+        }
+        println!("filepath: {:?}", filepath);
+        println!("temp_db_path: {:?}", temp_db_path);
+        println!("{:?}", temp_db_path.exists());
+        DriverDatabase::with_database_path(temp_db_path)
     }
 }
 
