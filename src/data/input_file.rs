@@ -3,6 +3,7 @@ use crate::error::InputFileParseSnafu;
 use core::fmt;
 use serde::{Deserialize, Deserializer, Serialize};
 use snafu::ResultExt;
+use speedy::{Readable, Writable};
 use std::str::FromStr;
 use std::{collections::BTreeSet, fs::File, path::PathBuf};
 
@@ -10,7 +11,9 @@ use super::database::HardwareId;
 use super::database::PciId;
 use super::database::UsbId;
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Readable, Writable,
+)]
 /// Represents a particular type of hardware setup, like Intel+Nvidia Hybrid Graphics, or Nvidia Discrete Graphics, Intel+AMD Hybrid Graphics, etc.
 pub struct HardwareSetup {
     #[serde(default)]
@@ -53,7 +56,9 @@ impl HardwareSetup {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Readable, Writable,
+)]
 pub enum HardwareKind {
     #[serde(
         alias = "graphics",
@@ -141,7 +146,9 @@ impl fmt::Display for HardwareKind {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Readable, Writable,
+)]
 pub enum HardwareList {
     #[serde(alias = "each")]
     /// Represents the presence of devices from each of the child groups
@@ -195,7 +202,9 @@ impl HardwareList {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Readable, Writable,
+)]
 pub enum HardwareListInner {
     #[serde(alias = "PCI", alias = "pci")]
     Pci(PciIdList),
@@ -204,7 +213,9 @@ pub enum HardwareListInner {
     Usb(UsbIdList),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Readable, Writable,
+)]
 pub struct PciIdList {
     #[serde(alias = "vendor-id", alias = "vendor", deserialize_with = "from_hex")]
     pub vendor: u16,
@@ -219,7 +230,9 @@ pub struct PciIdList {
     pub devices: BTreeSet<u16>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Readable, Writable,
+)]
 pub struct UsbIdList {
     #[serde(alias = "vendor-id", deserialize_with = "from_hex")]
     pub vendor: u16,
@@ -250,7 +263,9 @@ where
     u16::from_str_radix(&s, 16).map_err(serde::de::Error::custom)
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Readable, Writable,
+)]
 pub struct DriverOption {
     #[serde(
         default,
@@ -281,13 +296,17 @@ pub struct DriverOption {
     pub post_install: Option<Script>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Readable, Writable,
+)]
 pub struct Script {
-    pub path: PathBuf,
+    // pub path: PathBuf,
     pub language: ScriptKind,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Readable, Writable,
+)]
 pub enum ScriptKind {
     #[serde(alias = "PY", alias = "Py", alias = "py")]
     Python,

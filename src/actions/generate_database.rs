@@ -7,9 +7,9 @@ use crate::{
     error::{DatabaseSnafu, Error},
 };
 use owo_colors::{OwoColorize, Stream::Stdout};
-use rmp_serde;
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
+use speedy::{Readable, Writable};
 use std::{
     collections::BTreeSet,
     path::PathBuf,
@@ -107,7 +107,7 @@ pub fn generate_database_inner(
     };
 
     hardware_setups.iter().for_each(|hardware_setup| {
-        let mut hardware_setup_id = String::new();
+        let hardware_setup_id = new_hardware_setup_id();
         let mut driver_option_ids = BTreeSet::<String>::new();
 
         {
@@ -117,24 +117,23 @@ pub fn generate_database_inner(
             {
                 if data.is_kv() {
                     let kv = data.kv();
-                    hardware_setup_ids = rmp_serde::from_slice(kv.value()).unwrap();
+                    hardware_setup_ids = BTreeSet::<String>::read_from_buffer(kv.value()).unwrap();
                 }
             }
-            hardware_setup_ids.insert(hardware_setup_id);
+            hardware_setup_ids.insert(hardware_setup_id.clone());
             hardware_kind_to_hardware_setup_id_bucket
                 .put(
                     hardware_setup.hardware_kind.to_string(),
-                    rmp_serde::to_vec(&hardware_setup_ids).unwrap(),
+                    hardware_setup_ids.write_to_vec().unwrap(),
                 )
                 .context(DatabaseSnafu)
                 .unwrap();
         }
 
-        hardware_setup_id = new_hardware_setup_id();
         hardware_setup_id_to_hardware_setup_bucket
             .put(
                 hardware_setup_id.clone(),
-                rmp_serde::to_vec(hardware_setup).unwrap(),
+                hardware_setup.write_to_vec().unwrap(),
             )
             .context(DatabaseSnafu)
             .unwrap();
@@ -146,12 +145,13 @@ pub fn generate_database_inner(
                 if let Some(data) = pci_id_to_hardware_setup_id_bucket.get(&pci_id) {
                     if data.is_kv() {
                         let kv = data.kv();
-                        hardware_setup_ids = rmp_serde::from_slice(kv.value()).unwrap();
+                        hardware_setup_ids =
+                            BTreeSet::<String>::read_from_buffer(kv.value()).unwrap();
                     }
                 }
                 hardware_setup_ids.insert(hardware_setup_id.clone());
                 pci_id_to_hardware_setup_id_bucket
-                    .put(pci_id, rmp_serde::to_vec(&hardware_setup_ids).unwrap())
+                    .put(pci_id, hardware_setup_ids.write_to_vec().unwrap())
                     .context(DatabaseSnafu)
                     .unwrap();
             })
@@ -164,12 +164,13 @@ pub fn generate_database_inner(
                 if let Some(data) = usb_id_to_hardware_setup_id_bucket.get(&usb_id) {
                     if data.is_kv() {
                         let kv = data.kv();
-                        hardware_setup_ids = rmp_serde::from_slice(kv.value()).unwrap();
+                        hardware_setup_ids =
+                            BTreeSet::<String>::read_from_buffer(kv.value()).unwrap();
                     }
                 }
                 hardware_setup_ids.insert(hardware_setup_id.clone());
                 usb_id_to_hardware_setup_id_bucket
-                    .put(usb_id, rmp_serde::to_vec(&hardware_setup_ids).unwrap())
+                    .put(usb_id, hardware_setup_ids.write_to_vec().unwrap())
                     .context(DatabaseSnafu)
                     .unwrap();
             })
@@ -201,14 +202,15 @@ pub fn generate_database_inner(
                     {
                         if data.is_kv() {
                             let kv = data.kv();
-                            driver_option_ids = rmp_serde::from_slice(kv.value()).unwrap();
+                            driver_option_ids =
+                                BTreeSet::<String>::read_from_buffer(kv.value()).unwrap();
                         }
                     }
                     driver_option_ids.insert(driver_option_id.clone());
                     hardware_kind_to_driver_option_id_bucket
                         .put(
                             hardware_setup.hardware_kind.to_string(),
-                            rmp_serde::to_vec(&driver_option_ids).unwrap(),
+                            driver_option_ids.write_to_vec().unwrap(),
                         )
                         .context(DatabaseSnafu)
                         .unwrap();
@@ -216,16 +218,13 @@ pub fn generate_database_inner(
 
                 driver_option_ids.insert(driver_option_id.clone());
                 driver_option_id_to_driver_option_bucket
-                    .put(driver_option_id, rmp_serde::to_vec(driver_option).unwrap())
+                    .put(driver_option_id, driver_option.write_to_vec().unwrap())
                     .context(DatabaseSnafu)
                     .unwrap();
             });
 
         hardware_setup_id_to_driver_option_id_bucket
-            .put(
-                hardware_setup_id,
-                rmp_serde::to_vec(&driver_option_ids).unwrap(),
-            )
+            .put(hardware_setup_id, driver_option_ids.write_to_vec().unwrap())
             .context(DatabaseSnafu)
             .unwrap();
     });

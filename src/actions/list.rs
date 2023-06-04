@@ -8,6 +8,7 @@ use crate::{
 use owo_colors::{OwoColorize, Stream::Stdout};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
+use speedy::Readable;
 use std::collections::BTreeSet;
 use std::fmt::Display;
 use std::path::PathBuf;
@@ -124,15 +125,15 @@ fn all_driver_packages(
                 if let Some(data) =
                     hardware_kind_to_driver_option_id_bucket.get(hardware_kind.to_string())
                 {
-                    let driver_option_ids: BTreeSet<String> =
-                        rmp_serde::from_slice(data.kv().value()).unwrap();
+                    let driver_option_ids =
+                        BTreeSet::<String>::read_from_buffer(data.kv().value()).unwrap();
                     driver_option_ids
                         .iter()
                         .filter_map(|driver_option_id| {
                             if let Some(driver_option_data) =
                                 driver_option_id_to_driver_option_bucket.get(driver_option_id)
                             {
-                                rmp_serde::from_slice(driver_option_data.kv().value()).ok()
+                                DriverOption::read_from_buffer(driver_option_data.kv().value()).ok()
                             } else {
                                 None
                             }

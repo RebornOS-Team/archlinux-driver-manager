@@ -27,9 +27,7 @@ serde_yaml = "0.9"
 serde_json = "1.0"
 derivative = "2.2"
 hex = { version = "0.4", features = ["serde"] }
-rmp-serde = "1.1"
-# Data model
-ron = "0.8"
+speedy = "0.8"
 
 # ArchLinux package management system
 alpm = "2.2"
@@ -43,4 +41,5 @@ usb_enumeration = "0.2.0"
 # Miscellaneous
 snafu = "0.7"
 sudo = "0.6"
-lazy_static = "1.4.0"
+lazy_static = "1.4"
+

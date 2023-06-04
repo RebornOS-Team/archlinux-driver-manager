@@ -12,6 +12,7 @@ use devices;
 use owo_colors::{OwoColorize, Stream::Stdout};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
+use speedy::Readable;
 use std::{
     collections::{BTreeMap, BTreeSet},
     fmt::Display,
@@ -162,14 +163,14 @@ pub fn search_inner<T: Iterator<Item = String>>(
         if let Some(data) = hardware_kind_to_hardware_setup_id_bucket.get(hardware_kind.to_string())
         {
             let hardware_setup_ids: BTreeSet<String> =
-                rmp_serde::from_slice(data.kv().value()).unwrap();
+                BTreeSet::<String>::read_from_buffer(data.kv().value()).unwrap();
             return Ok(hardware_setup_ids
                 .iter()
                 .filter_map(|hardware_setup_id| {
                     if let Some(hardware_setup_data) =
                         hardware_setup_id_to_hardware_setup_bucket.get(hardware_setup_id)
                     {
-                        rmp_serde::from_slice(hardware_setup_data.kv().value()).ok()
+                        HardwareSetup::read_from_buffer(hardware_setup_data.kv().value()).ok()
                     } else {
                         None
                     }
@@ -196,7 +197,7 @@ pub fn search_inner<T: Iterator<Item = String>>(
     } else {
         return Ok(hardware_setup_id_to_hardware_setup_bucket
             .kv_pairs()
-            .filter_map(|data| rmp_serde::from_slice(data.value()).ok())
+            .filter_map(|data| HardwareSetup::read_from_buffer(data.value()).ok())
             .fold(
                 BTreeMap::<HardwareKind, BTreeSet<DriverOption>>::new(),
                 |mut grouped_driver_options, hardware_setup: HardwareSetup| {
