@@ -5,10 +5,8 @@ use snafu::Snafu;
 #[derive(Debug, Snafu)]
 #[snafu(visibility(pub))]
 pub enum Error {
-    #[snafu(display("The driver database could not be opened. More details: {source}"))]
-    Database {
-        source: rustbreak::error::RustbreakError,
-    },
+    #[snafu(display("The driver database encountered an error. More details: {source}"))]
+    Database { source: jammdb::Error },
 
     #[snafu(
         display("The input file at {} could not be parsed for driver data. More details: {}", path.to_string_lossy(), source)
