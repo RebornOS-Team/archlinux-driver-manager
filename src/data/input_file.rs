@@ -27,14 +27,17 @@ pub struct HardwareSetup {
 }
 
 impl HardwareSetup {
-    pub fn matching_driver_options<T: Iterator<Item = String>>(
+    pub fn matching_driver_options<'a, I>(
         &self,
-        hardware_ids: BTreeSet<HardwareId>,
-        optional_hardware: Option<&HardwareKind>,
-        tags: &T,
-    ) -> Option<BTreeSet<&DriverOption>> {
-        if let Some(hardwareKind) = optional_hardware {
-            if &self.hardware_kind != hardwareKind {
+        hardware_ids: &BTreeSet<HardwareId>,
+        optional_hardware: &Option<HardwareKind>,
+        mut tags: I,
+    ) -> Option<BTreeSet<&DriverOption>>
+    where
+        I: Iterator<Item = &'a String>,
+    {
+        if let Some(hardware_kind) = optional_hardware {
+            if &self.hardware_kind != hardware_kind {
                 return None;
             }
         }
@@ -44,13 +47,13 @@ impl HardwareSetup {
         return Some(
             self.driver_options
                 .iter()
-                .filter(|driver_option| tags.all(|tag| driver_option.tags.contains(&tag)))
+                .filter(|driver_option| tags.all(|tag| driver_option.tags.contains(tag)))
                 .collect(),
         );
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum HardwareKind {
     #[serde(
         alias = "graphics",
@@ -152,7 +155,7 @@ pub enum HardwareList {
 }
 
 impl HardwareList {
-    pub fn matches_with_hardware_ids(&self, hardware_ids: BTreeSet<HardwareId>) -> bool {
+    pub fn matches_with_hardware_ids(&self, hardware_ids: &BTreeSet<HardwareId>) -> bool {
         return match self {
             HardwareList::Each(hardware_lists_inner) => {
                 hardware_lists_inner.into_iter().all(|hardware_list_inner| {

@@ -92,16 +92,16 @@ pub fn generate_database_inner(
         .create_bucket("driver_option_id_to_driver_option_bucket")
         .context(DatabaseSnafu)?;
 
-    static hardware_setup_serial: AtomicUsize = AtomicUsize::new(1);
+    static HARDWARE_SETUP_SERIAL: AtomicUsize = AtomicUsize::new(1);
     let new_hardware_setup_id = || {
-        hardware_setup_serial
+        HARDWARE_SETUP_SERIAL
             .fetch_add(1, Ordering::SeqCst)
             .to_string()
     };
 
-    static driver_option_serial: AtomicUsize = AtomicUsize::new(1);
+    static DRIVER_OPTION_SERIAL: AtomicUsize = AtomicUsize::new(1);
     let new_driver_option_id = || {
-        driver_option_serial
+        DRIVER_OPTION_SERIAL
             .fetch_add(1, Ordering::SeqCst)
             .to_string()
     };
@@ -121,17 +121,23 @@ pub fn generate_database_inner(
                 }
             }
             hardware_setup_ids.insert(hardware_setup_id);
-            hardware_kind_to_hardware_setup_id_bucket.put(
-                hardware_setup.hardware_kind.to_string(),
-                rmp_serde::to_vec(&hardware_setup_ids).unwrap(),
-            );
+            hardware_kind_to_hardware_setup_id_bucket
+                .put(
+                    hardware_setup.hardware_kind.to_string(),
+                    rmp_serde::to_vec(&hardware_setup_ids).unwrap(),
+                )
+                .context(DatabaseSnafu)
+                .unwrap();
         }
 
         hardware_setup_id = new_hardware_setup_id();
-        hardware_setup_id_to_hardware_setup_bucket.put(
-            hardware_setup_id.clone(),
-            rmp_serde::to_vec(hardware_setup).unwrap(),
-        );
+        hardware_setup_id_to_hardware_setup_bucket
+            .put(
+                hardware_setup_id.clone(),
+                rmp_serde::to_vec(hardware_setup).unwrap(),
+            )
+            .context(DatabaseSnafu)
+            .unwrap();
 
         let process_pci_id_list = |pci_id_list: &PciIdList| {
             pci_id_list.devices.iter().for_each(|device| {
@@ -145,7 +151,9 @@ pub fn generate_database_inner(
                 }
                 hardware_setup_ids.insert(hardware_setup_id.clone());
                 pci_id_to_hardware_setup_id_bucket
-                    .put(pci_id, rmp_serde::to_vec(&hardware_setup_ids).unwrap());
+                    .put(pci_id, rmp_serde::to_vec(&hardware_setup_ids).unwrap())
+                    .context(DatabaseSnafu)
+                    .unwrap();
             })
         };
 
@@ -161,7 +169,9 @@ pub fn generate_database_inner(
                 }
                 hardware_setup_ids.insert(hardware_setup_id.clone());
                 usb_id_to_hardware_setup_id_bucket
-                    .put(usb_id, rmp_serde::to_vec(&hardware_setup_ids).unwrap());
+                    .put(usb_id, rmp_serde::to_vec(&hardware_setup_ids).unwrap())
+                    .context(DatabaseSnafu)
+                    .unwrap();
             })
         };
 
@@ -195,21 +205,29 @@ pub fn generate_database_inner(
                         }
                     }
                     driver_option_ids.insert(driver_option_id.clone());
-                    hardware_kind_to_driver_option_id_bucket.put(
-                        hardware_setup.hardware_kind.to_string(),
-                        rmp_serde::to_vec(&driver_option_ids).unwrap(),
-                    );
+                    hardware_kind_to_driver_option_id_bucket
+                        .put(
+                            hardware_setup.hardware_kind.to_string(),
+                            rmp_serde::to_vec(&driver_option_ids).unwrap(),
+                        )
+                        .context(DatabaseSnafu)
+                        .unwrap();
                 }
 
                 driver_option_ids.insert(driver_option_id.clone());
                 driver_option_id_to_driver_option_bucket
-                    .put(driver_option_id, rmp_serde::to_vec(driver_option).unwrap());
+                    .put(driver_option_id, rmp_serde::to_vec(driver_option).unwrap())
+                    .context(DatabaseSnafu)
+                    .unwrap();
             });
 
-        hardware_setup_id_to_driver_option_id_bucket.put(
-            hardware_setup_id,
-            rmp_serde::to_vec(&driver_option_ids).unwrap(),
-        );
+        hardware_setup_id_to_driver_option_id_bucket
+            .put(
+                hardware_setup_id,
+                rmp_serde::to_vec(&driver_option_ids).unwrap(),
+            )
+            .context(DatabaseSnafu)
+            .unwrap();
     });
 
     Ok(GenerateDatabaseActionOutput::new())

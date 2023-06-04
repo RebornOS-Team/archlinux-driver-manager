@@ -138,7 +138,7 @@ fn hardware_ids_present() -> BTreeSet<HardwareId> {
 
 pub fn search_inner<T: Iterator<Item = String>>(
     database_filepath: PathBuf,
-    optional_hardware: Option<&HardwareKind>,
+    optional_hardware: &Option<HardwareKind>,
     tags: T,
 ) -> Result<BTreeMap<HardwareKind, BTreeSet<DriverOption>>, Error> {
     let driver_database = DriverDatabase::with_database_path(database_filepath)?;
@@ -157,8 +157,6 @@ pub fn search_inner<T: Iterator<Item = String>>(
         .context(DatabaseSnafu)?;
 
     let hardware_ids_present = hardware_ids_present();
-
-    let result = BTreeMap::<HardwareKind, BTreeSet<DriverOption>>::new();
 
     if let Some(hardware_kind) = optional_hardware {
         if let Some(data) = hardware_kind_to_hardware_setup_id_bucket.get(hardware_kind.to_string())
@@ -180,14 +178,14 @@ pub fn search_inner<T: Iterator<Item = String>>(
                     BTreeMap::<HardwareKind, BTreeSet<DriverOption>>::new(),
                     |mut grouped_driver_options, hardware_setup: HardwareSetup| {
                         if let Some(more_driver_options) = hardware_setup.matching_driver_options(
-                            hardware_ids_present,
-                            optional_hardware,
-                            &tags,
+                            &hardware_ids_present,
+                            &optional_hardware,
+                            filter_tags.iter(),
                         ) {
                             grouped_driver_options
-                                .entry(hardware_setup.hardware_kind)
+                                .entry(hardware_setup.hardware_kind.clone())
                                 .or_default()
-                                .extend(more_driver_options.into_iter().map(|item| *item));
+                                .extend(more_driver_options.into_iter().map(|item| item.clone()));
                         }
                         grouped_driver_options
                     },
@@ -203,14 +201,14 @@ pub fn search_inner<T: Iterator<Item = String>>(
                 BTreeMap::<HardwareKind, BTreeSet<DriverOption>>::new(),
                 |mut grouped_driver_options, hardware_setup: HardwareSetup| {
                     if let Some(more_driver_options) = hardware_setup.matching_driver_options(
-                        hardware_ids_present,
-                        optional_hardware,
-                        &tags,
+                        &hardware_ids_present,
+                        &optional_hardware,
+                        filter_tags.iter(),
                     ) {
                         grouped_driver_options
-                            .entry(hardware_setup.hardware_kind)
+                            .entry(hardware_setup.hardware_kind.clone())
                             .or_default()
-                            .extend(more_driver_options.into_iter().map(|item| *item));
+                            .extend(more_driver_options.into_iter().map(|item| item.clone()));
                     }
                     grouped_driver_options
                 },
@@ -218,11 +216,13 @@ pub fn search_inner<T: Iterator<Item = String>>(
     }
 }
 
-pub fn search(search_action_arguments: SearchActionArguments) -> Result<SearchActionOutput, Error> {
+pub fn search<'a>(
+    search_action_arguments: SearchActionArguments,
+) -> Result<SearchActionOutput, Error> {
     Ok(SearchActionOutput {
         inner: search_inner(
             search_action_arguments.database_file,
-            search_action_arguments.hardware.as_ref(),
+            &search_action_arguments.hardware,
             search_action_arguments.tags.into_iter(),
         )?,
     })

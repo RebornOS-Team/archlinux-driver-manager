@@ -29,7 +29,7 @@ pub fn install_inner<T: Iterator<Item = String>>(
     tags: T,
     _enable_aur: bool,
 ) -> Result<InstallActionOutput, Error> {
-    let relevant_driver_records = search_inner(database_filepath.clone(), Some(&hardware), tags)?
+    let relevant_driver_records = search_inner(database_filepath.clone(), &Some(hardware), tags)?
         .into_values()
         .collect::<Vec<BTreeSet<DriverOption>>>()
         .pop()
@@ -41,7 +41,7 @@ pub fn install_inner<T: Iterator<Item = String>>(
         .expect("Error: Nothing to install")
         .packages
         .clone();
-    let packages_to_remove = list_inner(database_filepath.clone(), Some(&hardware), None).map_or(
+    let packages_to_remove = list_inner(database_filepath.clone(), &Some(hardware), None).map_or(
         Vec::<String>::new(),
         |installed_hash_map| {
             installed_hash_map.into_iter().fold(
