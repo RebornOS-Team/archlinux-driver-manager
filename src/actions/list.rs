@@ -167,7 +167,8 @@ fn all_driver_packages(
         return Ok(process_hardware_kind(
             &hardware_kind_to_driver_option_id_bucket
                 .kv_pairs()
-                .filter_map(|data| rmp_serde::from_slice(data.value()).ok())
+                .filter_map(|data| String::from_utf8(data.key().to_vec()).ok())
+                .map(|item| item.parse().unwrap())
                 .collect::<BTreeSet<HardwareKind>>(),
         ));
     }

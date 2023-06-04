@@ -64,9 +64,6 @@ impl DriverDatabase {
             )
             .unwrap();
         }
-        println!("filepath: {:?}", filepath);
-        println!("temp_db_path: {:?}", temp_db_path);
-        println!("{:?}", temp_db_path.exists());
         DriverDatabase::with_database_path(temp_db_path)
     }
 }

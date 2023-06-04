@@ -133,10 +133,10 @@ impl FromStr for HardwareKind {
 impl fmt::Display for HardwareKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            HardwareKind::Graphics => write!(f, "graphics"),
-            HardwareKind::Ethernet => write!(f, "ethernet"),
-            HardwareKind::Wireless => write!(f, "wireless"),
-            HardwareKind::Audio => write!(f, "audio"),
+            HardwareKind::Graphics => write!(f, "Graphics"),
+            HardwareKind::Ethernet => write!(f, "Ethernet"),
+            HardwareKind::Wireless => write!(f, "Wireless"),
+            HardwareKind::Audio => write!(f, "Audio"),
         }
     }
 }
