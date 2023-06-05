@@ -6,11 +6,11 @@
   description: Hardware setup with only Nvidia discrete GPU - Maxwell (NV110/GMXXX) series and newer
   hardware_kind: graphics
   hardware_list: !pci
-        vendor: 10de 
-        devices: [1381, 1392, 139a, 139b, 13b0, 1340, 1341, 1346, 1347, 134d, 13c0, 13c2, 13d7, 13d8, 13d9, 1401, 1407, 1427, 15f7, 15f8, 15f9, 1b00, 1b02, 1b06, 1b30, 1b38, 1b80, 1b81, 1b82, 1b83, 1b84, 1ba0, 1ba1, 1ba2, 1bb0, 1bb3, 1bb6, 1bb7, 1bb8, 1be0, 1be1, 1c02, 1c03, 1c20, 1c23, 1c60, 1c61, 1c62, 1c81, 1c82, 1c83, 1c8c, 1c8d, 1c8f, 1c92, 1d01, 1d10, 1d12, 1d81, 1db1, 1db4, 1db5, 1db6, 1dba, 1e02, 1e04, 1e07, 1e30, 1e30, 1e3c, 1e82, 1e87, 1e89, 1e90, 1eb0, 1eb1, 1ed0, 1f02, 1f07, 1f08, 1f10, 1f11, 1f50, 1f51, 2182, 2184, 1f82, 1f91]
+      vendor: 10de 
+      devices: [1381, 1392, 139a, 139b, 13b0, 1340, 1341, 1346, 1347, 134d, 13c0, 13c2, 13d7, 13d8, 13d9, 1401, 1407, 1427, 15f7, 15f8, 15f9, 1b00, 1b02, 1b06, 1b30, 1b38, 1b80, 1b81, 1b82, 1b83, 1b84, 1ba0, 1ba1, 1ba2, 1bb0, 1bb3, 1bb6, 1bb7, 1bb8, 1be0, 1be1, 1c02, 1c03, 1c20, 1c23, 1c60, 1c61, 1c62, 1c81, 1c82, 1c83, 1c8c, 1c8d, 1c8f, 1c92, 1d01, 1d10, 1d12, 1d81, 1db1, 1db4, 1db5, 1db6, 1dba, 1e02, 1e04, 1e07, 1e30, 1e30, 1e3c, 1e82, 1e87, 1e89, 1e90, 1eb0, 1eb1, 1ed0, 1f02, 1f07, 1f08, 1f10, 1f11, 1f50, 1f51, 2182, 2184, 1f82, 1f91]
   driver_options: 
     #-------------
-    - name: nvidia
+    - name: Nvidia
     #-------------
       order: 50      
       description: "Graphics driver for Nvidia GPU from the `nvidia` package found in the official Arch Linux `Extra` repository."
@@ -24,7 +24,7 @@
         - nvidia-utils
         - nvidia-settings
     #------------------
-    - name: nvidia-dkms
+    - name: Nvidia DKMS
     #------------------
       order: 100      
       description: "Graphics driver (that uses DKMS) for Nvidia GPU from the `nvidia-dkms` package found in the official Arch Linux `Extra` repository."
@@ -39,7 +39,7 @@
         - nvidia-utils
         - nvidia-settings
     #------------------
-    - name: nvidia-beta
+    - name: Nvidia Beta
     #------------------
       order: 150      
       description: "Beta graphics driver for Nvidia GPU from the `nvidia-beta` package found in the Arch user repository."
@@ -52,7 +52,7 @@
       packages: 
         - nvidia-beta
         - nvidia-utils
-        - nvidia-settings    
+        - nvidia-settings   
 
 #=================================
 - name: Nvidia dGPU Turing onwards
@@ -60,11 +60,11 @@
   description: Hardware setup with only Nvidia discrete GPU - Maxwell (NV110/GMXXX) series and newer
   hardware_kind: graphics
   hardware_list: !pci
-        vendor: 10de 
-        devices: [1e02, 1e04, 1e07, 1e30, 1e30, 1e3c, 1e82, 1e87, 1e89, 1e90, 1eb0, 1eb1, 1ed0, 1f02, 1f07, 1f08, 1f10, 1f11, 1f50, 1f51, 2182, 2184, 1f82, 1f91]
+      vendor: 10de 
+      devices: [1e02, 1e04, 1e07, 1e30, 1e30, 1e3c, 1e82, 1e87, 1e89, 1e90, 1eb0, 1eb1, 1ed0, 1f02, 1f07, 1f08, 1f10, 1f11, 1f50, 1f51, 2182, 2184, 1f82, 1f91]
   driver_options: 
     #-------------
-    - name: nvidia
+    - name: Nvidia
     #-------------
       order: 50      
       description: "Graphics driver for Nvidia GPU from the `nvidia` package found in the official Arch Linux `Extra` repository."
@@ -78,7 +78,7 @@
         - nvidia-utils
         - nvidia-settings
     #------------------
-    - name: nvidia-dkms
+    - name: Nvidia DKMS
     #------------------
       order: 100      
       description: "Graphics driver (that uses DKMS) for Nvidia GPU from the `nvidia-dkms` package found in the official Arch Linux `Extra` repository."
@@ -93,7 +93,7 @@
         - nvidia-utils
         - nvidia-settings
     #------------------
-    - name: nvidia-beta
+    - name: Nvidia Beta
     #------------------
       order: 150      
       description: "Beta graphics driver for Nvidia GPU from the `nvidia-beta` package found in the Arch user repository."
@@ -108,7 +108,7 @@
         - nvidia-utils
         - nvidia-settings    
     #------------------
-    - name: nvidia-open
+    - name: Nvidia Open
     #------------------
       order: 10      
       description: "Graphics driver for Nvidia GPU from the `nvidia-open` package found in the official Arch Linux `Extra` repository."
@@ -125,7 +125,7 @@
         - nvidia-utils
         - nvidia-settings
     #-----------------------
-    - name: nvidia-open-dkms
+    - name: Nvidia Open DKMS
     #-----------------------
       order: 10      
       description: "Graphics driver for Nvidia GPU from the `nvidia-open-dkms` package found in the official Arch Linux `Extra` repository."
@@ -143,3 +143,34 @@
         - nvidia-utils
         - nvidia-settings
 
+#===============================
+- name: Nvidia dGPU + Intel iGPU
+#===============================
+  description: Hardware setup with only Nvidia discrete GPU - Maxwell (NV110/GMXXX) series and newer
+  hardware_kind: graphics
+  hardware_list: 
+      !each
+        - !pci
+            vendor: 10de 
+            devices: [1381, 1392, 139a, 139b, 13b0, 1340, 1341, 1346, 1347, 134d, 13c0, 13c2, 13d7, 13d8, 13d9, 1401, 1407, 1427, 15f7, 15f8, 15f9, 1b00, 1b02, 1b06, 1b30, 1b38, 1b80, 1b81, 1b82, 1b83, 1b84, 1ba0, 1ba1, 1ba2, 1bb0, 1bb3, 1bb6, 1bb7, 1bb8, 1be0, 1be1, 1c02, 1c03, 1c20, 1c23, 1c60, 1c61, 1c62, 1c81, 1c82, 1c83, 1c8c, 1c8d, 1c8f, 1c92, 1d01, 1d10, 1d12, 1d81, 1db1, 1db4, 1db5, 1db6, 1dba, 1e02, 1e04, 1e07, 1e30, 1e30, 1e3c, 1e82, 1e87, 1e89, 1e90, 1eb0, 1eb1, 1ed0, 1f02, 1f07, 1f08, 1f10, 1f11, 1f50, 1f51, 2182, 2184, 1f82, 1f91]
+        - !pci
+            vendor: 8086
+            devices: [0BDA,0BD9,0BDB,0BD7,0BD6,0BD0,0BD5,56C0,56C1,56B3,56B2,56A4,56A3,5697,5696,5695,56B1,56B0,56A6,56A5,56A1,56A0,5694,5693,5692,5691,5690,A7A9,A7A8,A7A1,A7A0,A721,A720,A78B,A78A,A789,A788,A783,A782,A781,A780,4907,4905,4680,4682,4688,468A,468B,4690,4692,4693,46D0,46D1,46D2,4626,4628,462A,46A0,46A1,46A2,46A3,46A6,46A8,46AA,46B0,46B1,46B2,46B3,46C0,46C1,46C2,46C3,4C8A,4C8B,4C90,4C9A,4C8C,4C80,4E71,4E61,4E57,4E55,4E51,4571,4557,4555,4551,4541,9A59,9A60,9A68,9A70,9A40,9A49,9A78,9AC0,9AC9,9AD9,9AF8,8A70,8A71,8A56,8A58,8A5B,8A5D,8A54,8A5A,8A5C,8A57,8A59,8A50,8A51,8A52,8A53,3EA5,3EA8,3EA6,3EA7,3EA2,3E90,3E93,3E99,3E9C,3EA1,9BA5,9BA8,3EA4,9B21,9BA0,9BA2,9BA4,9BAA,9BAB,9BAC,87CA,3EA3,9B41,9BC0,9BC2,9BC4,9BCA,9BCB,9BCC,3E91,3E92,3E98,3E9B,9BC5,9BC8,3E96,3E9A,3E94,9BC6,9BE6,9BF6,3EA9,3EA0,593B,5923,5926,5927,5917,5912,591B,5916,5921,591A,591D,591E,591C,87C0,5913,5915,5902,5906,590B,590A,5908,590E,3185,3184,1A85,5A85,0A84,1A84,5A84,192A,1932,193B,193A,193D,1923,1926,1927,192B,192D,1912,191B,1913,1915,1917,191A,1916,1921,191D,191E,1902,1906,190B,190A,190E,163D,163A,1632,163E,163B,1636,1622,1626,162A,162B,162D,162E,1612,1616,161A,161B,161D,161E,1602,1606,160A,160B,160D,160E,22B0,22B2,22B3,22B1,0F30,0F31,0F32,0F33,0157,0155,0422,0426,042A,042B,042E,0C22,0C26,0C2A,0C2B,0C2E,0A22,0A2A,0A2B,0D2A,0D2B,0D2E,0A26,0A2E,0D22,0D26,0412,0416,0D12,041A,041B,0C12,0C16,0C1A,0C1B,0C1E,0A12,0A1A,0A1B,0D16,0D1A,0D1B,0D1E,041E,0A16,0A1E,0402,0406,040A,040B,040E,0C02,0C06,0C0A,0C0B,0C0E,0A02,0A06,0A0A,0A0B,0A0E,0D02,0D06,0D0A,0D0B,0D0E,0162,0166,016A,0152,0156,015A,0112,0122,0116,0126,0102,0106,010A,0042,0046,2A42,2E02,2E12,2E22,2E32,2E42,2E92,29A2,2982,2992,2972,2A02,2A12,A001,A011,29D2,29C2,29B2,27AE,27A2,2772,2592,258A,2582,2572,3582,358E,2562,3577]
+  driver_options: 
+    #--------------------------
+    - name: Bumblebee Switching
+    #--------------------------
+      order: 50      
+      # description: "Graphics driver for Nvidia GPU from the `nvidia` package found in the official Arch Linux `Extra` repository."
+      tags:
+        - nvidia
+        - intel
+        - proprietary
+        - closed source
+        - non free
+      packages: 
+        - nvidia
+        - nvidia-utils
+        - nvidia-settings
+        - mesa
+        - bumblebee
