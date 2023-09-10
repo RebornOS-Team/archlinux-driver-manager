@@ -1,6 +1,6 @@
 #! /usr/bin/env sh
 
-# Maintainer: shivanandvp <shivanandvp@rebornos.org>
+# Maintainer: shiva.patt <shivanandvp@rebornos.org>
 
 pkgver=0.0.1
 pkgrel=1
